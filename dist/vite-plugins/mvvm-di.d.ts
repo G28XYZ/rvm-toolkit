@@ -1,10 +1,15 @@
 type VitePluginLike = {
+    /** Имя plugin, которое Vite показывает в diagnostics. */
     name: string;
+    /** Порядок исполнения plugin относительно остальных Vite plugins. */
     enforce?: "pre" | "post";
+    /** Hook Vite, из которого plugin получает root проекта. */
     configResolved?(resolved: {
         root?: string;
     }): void;
+    /** Hook Vite для первичной генерации DI declarations. */
     buildStart?(): void | Promise<void>;
+    /** Hook Vite для incremental обновления при изменении source file. */
     handleHotUpdate?(ctx: {
         file: string;
     }): void | Promise<void>;
@@ -23,6 +28,8 @@ type VitePluginLike = {
  * export default defineConfig({
  *   plugins: [mvvmServiceDiPlugin()],
  * });
+ *
+ * @returns Vite-compatible plugin object.
  */
 export declare function mvvmServiceDiPlugin(): VitePluginLike;
 export {};

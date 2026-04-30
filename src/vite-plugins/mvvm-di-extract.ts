@@ -4,28 +4,48 @@ import ts from "typescript";
 import { type ContainerEntry, MVVM_MODULE } from "./mvvm-di-types";
 
 type ImportRef = {
+  /** Имя экспортированной константы в импортируемом модуле. */
   importName: string;
+  /** Абсолютный путь к модулю, из которого импортирована константа. */
   sourcePath: string;
 };
 
 type ResolveState = {
+  /** Cache для уже вычисленных imported constants между вложенными imports. */
   cache: Map<string, string | null>;
+  /** Guard от циклического resolving вида a.ts -> b.ts -> a.ts. */
   resolving: Set<string>;
 };
 
 type ResolveContext = {
+  /** Абсолютный путь к файлу, expression которого сейчас анализируется. */
   filePath: string;
+  /** Const declarations, объявленные в текущем source file. */
   localConsts: Map<string, ts.Expression>;
+  /** Named imports, которые могут указывать на string constants. */
   importedConsts: Map<string, ImportRef>;
+  /** Cache resolved значений локальных const identifiers. */
   localResolved: Map<string, string | null>;
+  /** Cache resolved значений импортированных const identifiers в текущем файле. */
   importedResolved: Map<string, string | null>;
+  /** Общий cache/guard для resolving imports по всей цепочке. */
   resolveState: ResolveState;
 };
 
 const SERVICE_DECORATOR = "Service";
 const STORE_DECORATOR = "Store";
 
-/** Извлечь Service/Store entries из одного TypeScript source file. */
+/**
+ * Извлечь Service/Store entries из одного TypeScript source file.
+ *
+ * Функция сканирует только один файл: находит локальные aliases импортов
+ * Service/Store из rvm-toolkit, затем читает decorators у class declarations.
+ * Для ключа декоратора поддерживаются string literals, template strings,
+ * конкатенация строк и const identifiers, включая imported const.
+ *
+ * @param filePath Абсолютный путь к .ts/.tsx файлу, который нужно просканировать.
+ * @returns Найденные DI entries для последующего обновления container.d.ts.
+ */
 export async function extractEntries(filePath: string): Promise<ContainerEntry[]> {
   const content = await fs.readFile(filePath, "utf8");
   const kind = inferScriptKind(filePath);
@@ -93,6 +113,13 @@ export async function extractEntries(filePath: string): Promise<ContainerEntry[]
   return results;
 }
 
+/**
+ * Получить DI key из первого аргумента @Service/@Store.
+ *
+ * @param arg Первый аргумент decorator call expression.
+ * @param context Контекст resolving для текущего source file.
+ * @returns Строковый key или null, если expression нельзя безопасно вычислить.
+ */
 async function resolveServiceIdFromDecoratorArg(
   arg: ts.Expression | undefined,
   context: ResolveContext
@@ -113,6 +140,14 @@ async function resolveServiceIdFromDecoratorArg(
   return resolveStringFromExpression(arg, context);
 }
 
+/**
+ * Собрать context для resolving string constants внутри source file.
+ *
+ * @param source Parsed TypeScript source file.
+ * @param filePath Абсолютный путь к этому source file.
+ * @param resolveState Общий cache для imported constants.
+ * @returns Context с локальными const declarations и импортами.
+ */
 async function buildResolveContext(
   source: ts.SourceFile,
   filePath: string,
@@ -130,6 +165,12 @@ async function buildResolveContext(
   };
 }
 
+/**
+ * Собрать локальные const initializers из source file.
+ *
+ * @param source Parsed TypeScript source file.
+ * @returns Map local identifier -> initializer expression.
+ */
 function collectLocalConstInitializers(source: ts.SourceFile): Map<string, ts.Expression> {
   const locals = new Map<string, ts.Expression>();
   for (const statement of source.statements) {
@@ -143,6 +184,13 @@ function collectLocalConstInitializers(source: ts.SourceFile): Map<string, ts.Ex
   return locals;
 }
 
+/**
+ * Собрать named imports, которые могут быть ссылками на string constants.
+ *
+ * @param source Parsed TypeScript source file.
+ * @param filePath Абсолютный путь к файлу с imports.
+ * @returns Map local identifier -> imported name/source path.
+ */
 async function collectImportedConstRefs(source: ts.SourceFile, filePath: string): Promise<Map<string, ImportRef>> {
   const imports = new Map<string, ImportRef>();
   for (const statement of source.statements) {
@@ -163,6 +211,13 @@ async function collectImportedConstRefs(source: ts.SourceFile, filePath: string)
   return imports;
 }
 
+/**
+ * Разрешить relative import specifier в конкретный файл.
+ *
+ * @param fromFilePath Абсолютный путь к файлу, где стоит import.
+ * @param moduleName Module specifier из import declaration.
+ * @returns Абсолютный путь к найденному файлу или null для non-relative imports.
+ */
 async function resolveImportSource(fromFilePath: string, moduleName: string): Promise<string | null> {
   if (!moduleName.startsWith(".")) return null;
   const basePath = path.resolve(path.dirname(fromFilePath), moduleName);
@@ -189,6 +244,13 @@ async function resolveImportSource(fromFilePath: string, moduleName: string): Pr
   return null;
 }
 
+/**
+ * Попытаться вычислить string value из TypeScript expression.
+ *
+ * @param expr Expression, используемый как DI key или const initializer.
+ * @param context Context resolving текущего файла.
+ * @returns Строковое значение или null для dynamic/unsupported expression.
+ */
 async function resolveStringFromExpression(expr: ts.Expression, context: ResolveContext): Promise<string | null> {
   if (ts.isStringLiteralLike(expr)) return expr.text;
   if (ts.isNoSubstitutionTemplateLiteral(expr)) return expr.text;
@@ -220,6 +282,13 @@ async function resolveStringFromExpression(expr: ts.Expression, context: Resolve
   return null;
 }
 
+/**
+ * Разрешить identifier через локальные const declarations или imported const.
+ *
+ * @param name Имя identifier.
+ * @param context Context resolving текущего файла.
+ * @returns Строковое значение identifier или null.
+ */
 async function resolveStringFromIdentifier(name: string, context: ResolveContext): Promise<string | null> {
   if (context.localResolved.has(name)) {
     return context.localResolved.get(name) ?? null;
@@ -242,6 +311,13 @@ async function resolveStringFromIdentifier(name: string, context: ResolveContext
   return null;
 }
 
+/**
+ * Разрешить imported string constant с общим cache и guard от циклов.
+ *
+ * @param ref Ссылка на imported constant.
+ * @param resolveState Общий cache/guard resolving.
+ * @returns Строковое значение imported constant или null.
+ */
 async function resolveImportedStringConstant(ref: ImportRef, resolveState: ResolveState): Promise<string | null> {
   const cacheKey = `${ref.sourcePath}::${ref.importName}`;
   if (resolveState.cache.has(cacheKey)) {
@@ -255,6 +331,14 @@ async function resolveImportedStringConstant(ref: ImportRef, resolveState: Resol
   return resolved;
 }
 
+/**
+ * Найти exported const в другом файле и вычислить его string value.
+ *
+ * @param filePath Абсолютный путь к импортированному файлу.
+ * @param exportName Имя export, которое нужно разрешить.
+ * @param resolveState Общий cache/guard resolving.
+ * @returns Строковое значение export или null.
+ */
 async function resolveExportedStringConstant(
   filePath: string,
   exportName: string,
@@ -279,6 +363,12 @@ async function resolveExportedStringConstant(
   return resolveStringFromExpression(initializer, context);
 }
 
+/**
+ * Собрать map exported name -> local name для const declarations.
+ *
+ * @param source Parsed TypeScript source file.
+ * @returns Map имени export к локальному identifier.
+ */
 function collectExportedNameMap(source: ts.SourceFile): Map<string, string> {
   const exported = new Map<string, string>();
   for (const statement of source.statements) {
@@ -299,12 +389,24 @@ function collectExportedNameMap(source: ts.SourceFile): Map<string, string> {
   return exported;
 }
 
+/**
+ * Прочитать файл и распарсить его как TypeScript SourceFile.
+ *
+ * @param filePath Абсолютный путь к .ts/.tsx/.js/.jsx файлу.
+ * @returns Parsed TypeScript source file.
+ */
 async function readSourceFile(filePath: string): Promise<ts.SourceFile> {
   const content = await fs.readFile(filePath, "utf8");
   const kind = inferScriptKind(filePath);
   return ts.createSourceFile(filePath, content, ts.ScriptTarget.Latest, true, kind);
 }
 
+/**
+ * Определить TypeScript parser mode по расширению файла.
+ *
+ * @param filePath Путь к source file.
+ * @returns ScriptKind для ts.createSourceFile.
+ */
 function inferScriptKind(filePath: string): ts.ScriptKind {
   if (filePath.endsWith(".tsx")) return ts.ScriptKind.TSX;
   if (filePath.endsWith(".ts") || filePath.endsWith(".d.ts")) return ts.ScriptKind.TS;
@@ -313,6 +415,12 @@ function inferScriptKind(filePath: string): ts.ScriptKind {
   return ts.ScriptKind.TS;
 }
 
+/**
+ * Проверить существование файла без выброса fs error наружу.
+ *
+ * @param filePath Абсолютный путь к файлу.
+ * @returns true, если файл доступен для текущего процесса.
+ */
 async function exists(filePath: string): Promise<boolean> {
   try {
     await fs.access(filePath);

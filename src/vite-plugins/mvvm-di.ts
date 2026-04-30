@@ -13,15 +13,22 @@ import { type ContainerEntry, MVVM_MODULE } from "./mvvm-di-types";
 
 /** Цель для генерации container.d.ts. */
 type ContainerTarget = {
+  /** Абсолютный путь к найденному или будущему container.d.ts. */
   containerPath: string;
+  /** Был ли container.d.ts уже создан до текущего обновления. */
   existed: boolean;
 };
 
 type VitePluginLike = {
+  /** Имя plugin, которое Vite показывает в diagnostics. */
   name: string;
+  /** Порядок исполнения plugin относительно остальных Vite plugins. */
   enforce?: "pre" | "post";
+  /** Hook Vite, из которого plugin получает root проекта. */
   configResolved?(resolved: { root?: string }): void;
+  /** Hook Vite для первичной генерации DI declarations. */
   buildStart?(): void | Promise<void>;
+  /** Hook Vite для incremental обновления при изменении source file. */
   handleHotUpdate?(ctx: { file: string }): void | Promise<void>;
 };
 
@@ -39,13 +46,19 @@ type VitePluginLike = {
  * export default defineConfig({
  *   plugins: [mvvmServiceDiPlugin()],
  * });
+ *
+ * @returns Vite-compatible plugin object.
  */
 export function mvvmServiceDiPlugin(): VitePluginLike {
   let config: { root?: string };
   let srcRoot = "";
   let diPath = "";
 
-  /** Полный скан исходников и обновление контейнеров. */
+  /**
+   * Полностью просканировать src root и обновить container declarations.
+   *
+   * @returns Promise, который завершается после обработки всех .ts/.tsx файлов.
+   */
   async function scanAndUpdateAll() {
     const files = await collectSourceFiles(srcRoot);
     for (const file of files) {
@@ -53,6 +66,15 @@ export function mvvmServiceDiPlugin(): VitePluginLike {
     }
   }
 
+  /**
+   * Создать di.d.ts, если его еще нет.
+   *
+   * При наличии container.d.ts plugin собирает imports и extends для уже
+   * существующих container interfaces. Если контейнеров нет, создает пустые
+   * DiServices/DiStores declarations.
+   *
+   * @returns Promise, который завершается после проверки/создания di.d.ts.
+   */
   async function ensureDiFile() {
     if (!diPath) return;
     const diExists = await exists(diPath);
@@ -104,7 +126,12 @@ export function mvvmServiceDiPlugin(): VitePluginLike {
     await fs.writeFile(diPath, content, "utf8");
   }
 
-  /** Обработать конкретный файл и обновить контейнеры. */
+  /**
+   * Обработать конкретный source file и обновить связанные контейнеры.
+   *
+   * @param filePath Абсолютный путь к измененному или найденному source file.
+   * @returns Promise, который завершается после записи нужных declarations.
+   */
   async function processFile(filePath: string) {
     const entries = await extractEntries(filePath);
     for (const entry of entries) {
@@ -112,7 +139,12 @@ export function mvvmServiceDiPlugin(): VitePluginLike {
     }
   }
 
-  /** Добавить сущность в container.d.ts и di.d.ts. */
+  /**
+   * Добавить одну найденную DI entry в container.d.ts и подключить ее к di.d.ts.
+   *
+   * @param entry Service/store entry, найденная AST scan module.
+   * @returns Promise, который завершается после синхронизации container и di.
+   */
   async function ensureEntryInContainer(entry: ContainerEntry) {
     const target = await findContainerTarget(entry.filePath);
     const containerExisted = target.existed;
@@ -150,7 +182,16 @@ export function mvvmServiceDiPlugin(): VitePluginLike {
     await ensureDiIncludesContainer(target.containerPath, interfaceName, diInterfaceName);
   }
 
-  /** Найти или определить путь для container.d.ts. */
+  /**
+   * Найти ближайший container.d.ts или вычислить путь нового контейнера.
+   *
+   * Поиск идет вверх от файла до src root. Если контейнер не найден, новый
+   * container.d.ts размещается на уровне первого сегмента внутри src, а для
+   * src/modules/<name> - внутри конкретного module directory.
+   *
+   * @param filePath Абсолютный путь к source file с DI entry.
+   * @returns Путь container.d.ts и признак существования файла.
+   */
   async function findContainerTarget(filePath: string): Promise<ContainerTarget> {
     const absolute = path.resolve(filePath);
     let currentDir = path.dirname(absolute);
@@ -177,8 +218,19 @@ export function mvvmServiceDiPlugin(): VitePluginLike {
     return { containerPath: path.join(containerDir, "container.d.ts"), existed: false };
   }
 
-  /** Убедиться, что di.d.ts содержит импорт и интерфейс контейнера. */
-  async function ensureDiIncludesContainer(containerPath: string, interfaceName: string, diInterfaceName: "DiServices" | "DiStores") {
+  /**
+   * Убедиться, что di.d.ts содержит import контейнера и extends нужного root interface.
+   *
+   * @param containerPath Абсолютный путь к container.d.ts.
+   * @param interfaceName Имя container interface, которое нужно подключить.
+   * @param diInterfaceName Root interface для declaration merging.
+   * @returns Promise, который завершается после синхронизации di.d.ts.
+   */
+  async function ensureDiIncludesContainer(
+    containerPath: string,
+    interfaceName: string,
+    diInterfaceName: "DiServices" | "DiStores"
+  ) {
     if (!diPath) return;
 
     const diExists = await exists(diPath);
@@ -217,7 +269,13 @@ export function mvvmServiceDiPlugin(): VitePluginLike {
     }
   }
 
-  /** Вставить import в di.d.ts. */
+  /**
+   * Вставить import в di.d.ts после существующего блока import statements.
+   *
+   * @param content Текущий текст di.d.ts.
+   * @param importStatement Полная строка import.
+   * @returns Текст di.d.ts с добавленным import.
+   */
   function insertDiImport(content: string, importStatement: string): string {
     const lines = content.split("\n");
     let insertIndex = 0;
@@ -234,13 +292,25 @@ export function mvvmServiceDiPlugin(): VitePluginLike {
     return lines.join("\n");
   }
 
-  /** Исправить устаревший синтаксис interface DiServices, X {} на extends. */
+  /**
+   * Исправить устаревший синтаксис interface DiServices, X {} на extends.
+   *
+   * @param content Текущий текст di.d.ts.
+   * @param name Имя root DI interface.
+   * @returns Текст di.d.ts с нормализованным interface declaration.
+   */
   function normalizeDiDeclaration(content: string, name: "DiServices" | "DiStores") {
     const re = new RegExp(`interface ${name},\\s*([^\\{]+)\\{`, "g");
     return content.replace(re, `interface ${name} extends $1{`);
   }
 
-  /** Убедиться, что интерфейс DiServices/DiStores объявлен в declare module. */
+  /**
+   * Убедиться, что root DI interface объявлен внутри declare module.
+   *
+   * @param content Текущий текст di.d.ts.
+   * @param name Имя root DI interface.
+   * @returns Текст di.d.ts с добавленным interface, если его не было.
+   */
   function ensureDiInterfaceDeclaration(content: string, name: "DiServices" | "DiStores") {
     if (new RegExp(`interface\\s+${name}\\b`).test(content)) {
       return content;
@@ -254,7 +324,13 @@ export function mvvmServiceDiPlugin(): VitePluginLike {
     return content.slice(0, moduleEnd) + insertion + content.slice(moduleEnd);
   }
 
-  /** Найти позицию закрывающей скобки для блока, начиная после "{". */
+  /**
+   * Найти позицию закрывающей скобки для блока, начиная после "{".
+   *
+   * @param content Текст, в котором выполняется поиск.
+   * @param startIndex Индекс сразу после открывающей скобки блока.
+   * @returns Индекс matching "}" или -1, если блок не закрыт.
+   */
   function findMatchingBrace(content: string, startIndex: number) {
     let depth = 1;
     for (let i = startIndex; i < content.length; i += 1) {
@@ -266,7 +342,14 @@ export function mvvmServiceDiPlugin(): VitePluginLike {
     return -1;
   }
 
-  /** Обновить extends у interface DiServices/DiStores. */
+  /**
+   * Добавить container interface в extends list root DI interface.
+   *
+   * @param content Текущий текст di.d.ts.
+   * @param diInterfaceName Root interface, который нужно расширить.
+   * @param interfaceName Container interface, который должен быть в extends.
+   * @returns Текст di.d.ts с обновленным extends list.
+   */
   function ensureDiExtends(content: string, diInterfaceName: "DiServices" | "DiStores", interfaceName: string) {
     const match = content.match(new RegExp(`interface ${diInterfaceName}(\\s+extends\\s+([^\\{]+))?\\s*\\{`));
     if (!match || match.index === undefined) return content;
@@ -282,7 +365,12 @@ export function mvvmServiceDiPlugin(): VitePluginLike {
     return content.slice(0, start) + `interface ${diInterfaceName}${insertion}` + content.slice(end);
   }
 
-  /** Собрать все .ts/.tsx файлы в директории. */
+  /**
+   * Рекурсивно собрать все runtime .ts/.tsx files в директории.
+   *
+   * @param dir Директория, с которой начинается обход.
+   * @returns Абсолютные пути к .ts/.tsx файлам без .d.ts.
+   */
   async function collectSourceFiles(dir: string): Promise<string[]> {
     const entries = await fs.readdir(dir, { withFileTypes: true });
     const files: string[] = [];
@@ -302,7 +390,12 @@ export function mvvmServiceDiPlugin(): VitePluginLike {
     return files;
   }
 
-  /** Собрать все container.d.ts в директории src. */
+  /**
+   * Рекурсивно собрать все container.d.ts в src root.
+   *
+   * @param dir Директория, с которой начинается обход.
+   * @returns Абсолютные пути к найденным container.d.ts.
+   */
   async function collectContainerFiles(dir: string): Promise<string[]> {
     const entries = await fs.readdir(dir, { withFileTypes: true });
     const files: string[] = [];
@@ -322,7 +415,12 @@ export function mvvmServiceDiPlugin(): VitePluginLike {
     return files;
   }
 
-  /** Проверить существование файла. */
+  /**
+   * Проверить существование файла без выброса fs error наружу.
+   *
+   * @param filePath Абсолютный путь к файлу.
+   * @returns true, если файл доступен для текущего процесса.
+   */
   async function exists(filePath: string): Promise<boolean> {
     try {
       await fs.access(filePath);
