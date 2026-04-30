@@ -11,7 +11,7 @@
 import { ModelData, Model } from "../model";
 import { IFieldMetadata, FieldMetadata } from "../model/data";
 import { getOwnMetadata, defineMetadata } from "../utils";
-import { isLegacyPropertyDecoratorArgs, isDecoratorContext, registerPrototypeMetadata } from "../utils/decorators";
+import { applyFieldDecorator, isDecoratorContext, isLegacyPropertyDecoratorArgs, registerPrototypeMetadata } from "../utils/decorators";
 import { AnyFieldDecorator } from "./types";
 
 type FieldOptions<This> = Pick<
@@ -52,7 +52,7 @@ export const field: FieldDecorator = function field<This, T>(
 ) {
   const resolvedOptions = isLegacyPropertyDecoratorArgs(optionsOrTarget, contextOrKey) ? undefined : optionsOrTarget;
 
-  const defineLegacy = (target: object, name: string | symbol) => {
+  const defineLegacyField = (target: object, name: string | symbol) => {
     const instance = new FieldMetadata({ ...resolvedOptions, name: String(name), ctx: null });
     defineMetadata(
       instance.metadataKey,
@@ -90,7 +90,7 @@ export const field: FieldDecorator = function field<This, T>(
     }
   };
 
-  const define = (ctx: ClassFieldDecoratorContext<Model<T>, T>) => {
+  const defineStage3Field = (ctx: ClassFieldDecoratorContext<Model<T>, T>) => {
     ctx.addInitializer(function (this: Model<T>) {
       if (this instanceof Model && typeof this.initField === "function") {
         const instance = new FieldMetadata({
@@ -108,15 +108,11 @@ export const field: FieldDecorator = function field<This, T>(
     t: object,
     ctxOrKey: ClassFieldDecoratorContext<This | Model<T>, T> | string | symbol
   ) {
-    if (isLegacyPropertyDecoratorArgs(t, ctxOrKey)) {
-      defineLegacy(t, ctxOrKey);
-      return;
-    }
-    if (isDecoratorContext(ctxOrKey)) {
-      define(ctxOrKey);
-      if (ctxOrKey.kind === "field") return (value: T) => value;
-      return ctxOrKey;
-    }
+    return applyFieldDecorator(t, ctxOrKey, {
+      defineLegacy: defineLegacyField,
+      defineStage3: defineStage3Field,
+      initializer: (value: T) => value,
+    });
   }
 
   if (isLegacyPropertyDecoratorArgs(optionsOrTarget, contextOrKey)) {

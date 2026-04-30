@@ -1,7 +1,7 @@
 import { DecoratorCallbackType, Model } from "../model";
 import { ValidationMetadata } from "../model/data";
 import { getOwnMetadata, defineMetadata } from "../utils";
-import { isLegacyPropertyDecoratorArgs, isDecoratorContext, registerPrototypeMetadata } from "../utils/decorators";
+import { applyFieldDecorator, registerPrototypeMetadata } from "../utils/decorators";
 import { AnyFieldDecorator } from "./types";
 
 /**
@@ -17,13 +17,13 @@ import { AnyFieldDecorator } from "./types";
  */
 export function validation<This, T>(fn: DecoratorCallbackType<T, This>): AnyFieldDecorator<This, T>;
 export function validation<This, T>(fn: DecoratorCallbackType<T, This>): any {
-  const defineLegacy = (target: object, name: string | symbol) => {
+  const defineLegacyValidation = (target: object, name: string | symbol) => {
     const instance = new ValidationMetadata({ callback: fn, name: String(name) });
     const fields = getOwnMetadata(instance.metadataKey, target, new Array<ValidationMetadata>());
     defineMetadata(instance.metadataKey, [...fields, instance], target);
   };
 
-  const define = (c: ClassFieldDecoratorContext<Model<T>, T>) => {
+  const defineStage3Validation = (c: ClassFieldDecoratorContext<Model<T>, T>) => {
     const instance = new ValidationMetadata({ callback: fn, name: String(c.name) });
     c.addInitializer(function (this: This) {
       registerPrototypeMetadata(Object.getPrototypeOf(this as object), instance);
@@ -31,15 +31,11 @@ export function validation<This, T>(fn: DecoratorCallbackType<T, This>): any {
   };
 
   function callback(t: any, c: ClassFieldDecoratorContext<This | Model<T>, T> | string | symbol) {
-    if (isLegacyPropertyDecoratorArgs(t, c)) {
-      defineLegacy(t, c);
-      return;
-    }
-    if (isDecoratorContext(c)) {
-      define(c);
-      if ((c).kind === "field") return (value: T) => value;
-      return c;
-    }
+    return applyFieldDecorator(t, c, {
+      defineLegacy: defineLegacyValidation,
+      defineStage3: defineStage3Validation,
+      initializer: (value: T) => value,
+    });
   }
 
   if (fn) return ((t: undefined, c: ClassFieldDecoratorContext<This, T>) => callback(t, c)) as any;

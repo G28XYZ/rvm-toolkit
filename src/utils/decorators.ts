@@ -24,6 +24,29 @@ export const createLegacyClassContext = (name: string | symbol) =>
     metadata: {},
   }) as unknown as ClassDecoratorContext<any>;
 
+type FieldDecoratorAdapter<This, T> = {
+  defineLegacy: (target: object, name: LegacyPropertyKey) => void;
+  defineStage3: (context: ClassFieldDecoratorContext<This, T>) => void;
+  initializer?: (value: T) => T;
+};
+
+export const applyFieldDecorator = <This, T>(
+  targetOrValue: object | undefined,
+  contextOrKey: ClassFieldDecoratorContext<This, T> | string | symbol,
+  adapter: FieldDecoratorAdapter<This, T>
+): ClassFieldDecoratorContext<This, T> | ((value: T) => T) | void => {
+  if (isLegacyPropertyDecoratorArgs(targetOrValue, contextOrKey)) {
+    adapter.defineLegacy(targetOrValue, contextOrKey);
+    return;
+  }
+
+  if (isDecoratorContext(contextOrKey)) {
+    adapter.defineStage3(contextOrKey as ClassFieldDecoratorContext<This, T>);
+    if (contextOrKey.kind === "field") return adapter.initializer;
+    return contextOrKey as ClassFieldDecoratorContext<This, T>;
+  }
+};
+
 export const registerPrototypeMetadata = <T extends PrototypeMetadata>(proto: object, instance: T): void => {
   if (!proto) return;
 

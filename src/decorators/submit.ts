@@ -1,7 +1,7 @@
 import { DecoratorCallbackType } from "../model";
 import { SubmitMetadata } from "../model/data";
 import { getOwnMetadata, defineMetadata } from "../utils";
-import { isLegacyPropertyDecoratorArgs, isDecoratorContext, registerPrototypeMetadata } from "../utils/decorators";
+import { applyFieldDecorator, registerPrototypeMetadata } from "../utils/decorators";
 import { AnyFieldDecorator } from "./types";
 
 /**
@@ -16,13 +16,13 @@ import { AnyFieldDecorator } from "./types";
  */
 export function submit<This, T>(fn: DecoratorCallbackType<T, This>): AnyFieldDecorator<This, T>;
 export function submit<This, T>(fn: DecoratorCallbackType<T, This>) {
-  const defineLegacy = (target: object, name: string | symbol) => {
+  const defineLegacySubmit = (target: object, name: string | symbol) => {
     const instance = new SubmitMetadata({ callback: fn, name: String(name) });
     const fields = getOwnMetadata(instance.metadataKey, target, new Array<SubmitMetadata>());
     defineMetadata(instance.metadataKey, [...fields, instance], target);
   };
 
-  const define = (c: ClassFieldDecoratorContext<This, T>) => {
+  const defineStage3Submit = (c: ClassFieldDecoratorContext<This, T>) => {
     const instance = new SubmitMetadata({ callback: fn, name: String(c.name) });
     c.addInitializer(function (this: This) {
       registerPrototypeMetadata(Object.getPrototypeOf(this as object), instance);
@@ -30,15 +30,11 @@ export function submit<This, T>(fn: DecoratorCallbackType<T, This>) {
   };
 
   function callback(t: any, c: ClassFieldDecoratorContext<This, T>) {
-    if (isLegacyPropertyDecoratorArgs(t, c)) {
-      defineLegacy(t, c);
-      return;
-    }
-    if (isDecoratorContext(c)) {
-      define(c);
-      if (c.kind === "field") return (value: T) => value;
-      return c;
-    }
+    return applyFieldDecorator(t, c, {
+      defineLegacy: defineLegacySubmit,
+      defineStage3: defineStage3Submit,
+      initializer: (value: T) => value,
+    });
   }
 
   if (fn) return ((t: undefined, c: ClassFieldDecoratorContext<This, T>) => callback(t, c)) as any;
