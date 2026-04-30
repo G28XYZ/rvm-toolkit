@@ -2,6 +2,7 @@ import { observer } from "mobx-react";
 import { GetService } from "../typedi";
 import type { DiServices, InjectType } from "../typedi";
 import { defineMetadata, TInstance } from "../utils";
+import { getProperty, setProperty } from "../utils/property";
 import { PropFromViewMetadata } from "../model/data";
 import { ReactElement, isValidElement, useEffect, useMemo } from "react";
 
@@ -78,9 +79,9 @@ export function view<U, T extends TInstance = TInstance>(
         if (resolvedPropsFromView instanceof Array) {
           const propMetadata = resolvedPropsFromView.find((item) => item.name === prop);
           if (propMetadata) {
-            const propValue = Reflect.get(viewProps, prop);
+            const propValue = getProperty(viewProps, prop);
             assertPropFromViewValue(prop, propValue);
-            Reflect.set(activeInstance, propMetadata.originName, propValue);
+            setProperty(activeInstance, propMetadata.originName, propValue);
           }
         }
       }

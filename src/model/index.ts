@@ -12,6 +12,7 @@ import {
 } from "./data";
 import { ModelOptions, ModelService, TModel, IMetadataModel } from "./types";
 import { EXCLUDE_METADATA_KEY, FIELD_METADATA_KEY, SUBMIT_METADATA_KEY, VALIDATION_METADATA_KEY } from "./meta";
+import { getProperty, hasOwnProperty, setProperty } from "../utils/property";
 /** */
 const submitMetadata = new SubmitMetadata();
 /** */
@@ -133,7 +134,7 @@ export class Model<T extends Record<string, any> = any > implements TModel<any> 
    */
   private initValidation(field?: string) {
     const validation = this.validation;
-    if (field) Reflect.get(validation, field);
+    if (field) getProperty(validation, field);
     else for (let validationKey in validation) validation[validationKey];
   }
 
@@ -152,16 +153,16 @@ export class Model<T extends Record<string, any> = any > implements TModel<any> 
     const fieldInstance = this.getFieldMeta(field);
     if (fieldInstance) {
       const fieldName = String(fieldInstance.name);
-      const hasOwnValue = Object.prototype.hasOwnProperty.call(this.initData, fieldName);
-      if (!hasOwnValue) Reflect.set(this.initData, fieldName, Reflect.get(this, fieldName));
+      const hasOwnValue = hasOwnProperty(this.initData, fieldName);
+      if (!hasOwnValue) setProperty(this.initData, fieldName, getProperty(this, fieldName));
       let value = fieldInstance?.factory
         ? fieldInstance.factory(this.initData, this)
-        : Reflect.get(this.initData, fieldName);
+        : getProperty(this.initData, fieldName);
       if (value === undefined && !fieldInstance?.factory) {
-        const fallback = Reflect.get(this, fieldName);
+        const fallback = getProperty(this, fieldName);
         if (fallback !== undefined) {
           value = fallback;
-          Reflect.set(this.initData, fieldName, fallback);
+          setProperty(this.initData, fieldName, fallback);
         }
       }
       this.defineFieldValue(field, value, fieldInstance);
@@ -274,14 +275,14 @@ export class Model<T extends Record<string, any> = any > implements TModel<any> 
    * Проверить изменение поля и обновить modified_.
    */
   private checkChange(field: string | keyof T, value: any) {
-    const originValue = Object.prototype.hasOwnProperty.call(this.committedData, field)
-      ? Reflect.get(this.committedData, field)
-      : Reflect.get(this.initData, field);
+    const originValue = hasOwnProperty(this.committedData, field)
+      ? getProperty(this.committedData, field)
+      : getProperty(this.initData, field);
     const isChanged = field && field in this.initData && !isEqual(originValue, value);
 
     runInAction(() => {
       if (isChanged) {
-        Reflect.set(this.modified_, field, originValue);
+        setProperty(this.modified_, field, originValue);
         return;
       }
       if (field in this.modified_ && isEqual(originValue, value)) {
@@ -300,7 +301,7 @@ export class Model<T extends Record<string, any> = any > implements TModel<any> 
     for (let field in this) {
       if (!Object.prototype.hasOwnProperty.call(this, field)) continue;
       if (fieldMap.has(field)) {
-        Reflect.set(this, field, Reflect.get(data, field));
+        setProperty(this, field, getProperty(data, field));
         this.initField(field);
       }
     }
@@ -327,7 +328,7 @@ export class Model<T extends Record<string, any> = any > implements TModel<any> 
    */
   @action protected commitField<K extends keyof T | string>(field: K) {
     if (field in this.modified_) {
-      Reflect.set(this.committedData, field, Reflect.get(this, field))
+      setProperty(this.committedData, field, getProperty(this, field))
     }
     delete this.modified_[field as keyof T];
 
@@ -340,9 +341,9 @@ export class Model<T extends Record<string, any> = any > implements TModel<any> 
   @action protected reject() {
     for (let field in this) {
       if (field in this.modified_) {
-        this[field] = Reflect.get(this.modified_ as object, field);
+        setProperty(this, field, getProperty(this.modified_ as object, field));
         this.commitField(field);
-        this.defineFieldValue(field, this[field]);
+        this.defineFieldValue(field, getProperty(this, field));
       }
     }
     this.commit();
@@ -375,7 +376,7 @@ export class Model<T extends Record<string, any> = any > implements TModel<any> 
     const excludeMap = this.getExcludeMetaCache().map;
 
     const getValue = (field: string) => {
-      const value = Reflect.get(this, field);
+      const value = getProperty(this, field);
       const submitInstance = submitMap.get(field);
       const callback = submitInstance?.callback;
       return typeof callback === "function" ? callback(value, this) : value;
@@ -386,7 +387,7 @@ export class Model<T extends Record<string, any> = any > implements TModel<any> 
       if (excludeInstance) {
         switch (typeof excludeInstance.callback) {
           case "boolean":  return Boolean(excludeInstance.callback);
-          case "function": return excludeInstance.callback(Reflect.get(this, field), this);
+          case "function": return excludeInstance.callback(getProperty(this, field), this);
         }
       }
 
@@ -400,7 +401,7 @@ export class Model<T extends Record<string, any> = any > implements TModel<any> 
         if(this.options?.byFields && !this.options.byFields.includes(item.name as keyof T)) return;
 
         if (isExcludeField(item.name)) return;
-        return Reflect.set(result as object, item.name, getValue(item.name));
+        setProperty(result, item.name, getValue(item.name));
       }
     });
 
@@ -416,7 +417,7 @@ export class Model<T extends Record<string, any> = any > implements TModel<any> 
 
     for (const item of this.getValidationMetaCache().list) {
       const fieldName = String(item.name);
-      Reflect.set(validation, fieldName, item.callback(Reflect.get(this, fieldName), this) || "");
+      setProperty(validation, fieldName, item.callback(getProperty(this, fieldName), this) || "");
     }
 
     return validation;

@@ -1,5 +1,6 @@
 import { VALIDATION_METADATA_KEY, SUBMIT_METADATA_KEY, EXCLUDE_METADATA_KEY, FIELD_METADATA_KEY, PROP_FROM_VIEW_METADATA_KEY } from "./meta";
 import { IMetadataModel } from "./types";
+import { getProperty, setProperty } from "../utils/property";
 
 
 /**
@@ -226,7 +227,7 @@ export class PropFromViewMetadata extends MetadataModel<IPropFromViewMetadata> {
     super(props);
     for (const field in this) {
       if (props && field in props) {
-        this[field] = Reflect.get(props, field);
+        setProperty(this, field, getProperty(props, field));
       }
     }
   }
