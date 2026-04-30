@@ -1,517 +1,527 @@
-import { d as u } from "../tslib.es6-DQYNRcek.js";
-import v from "node:fs/promises";
-import l from "node:path";
-import c from "typescript";
-const me = "Service", pe = "Store", D = "rvm-toolkit";
-function ge() {
-  let R, y = "", h = "";
-  function V() {
-    return u(this, void 0, void 0, function* () {
-      const e = yield W(y);
-      for (const n of e)
-        yield F(n);
+import { d as h } from "../tslib.es6-DQYNRcek.js";
+import E from "node:fs/promises";
+import p from "node:path";
+import d from "typescript";
+function B(e, n, t) {
+  const i = _(p.dirname(n), t.filePath), a = `import type { ${t.className} } from "${i}";`;
+  let l = e;
+  new RegExp(`^import type \\{ ${t.className} \\} from \\"${K(i)}\\";`, "m").test(e) || (l = U(l, a));
+  const u = Z(l, t.interfaceName);
+  if (!u) {
+    const x = [
+      "",
+      `export interface ${t.interfaceName} {`,
+      `  ${t.entryKey}: typeof ${t.className};`,
+      "}",
+      ""
+    ].join(`
+`);
+    return `${l.trimEnd()}
+${x}`;
+  }
+  const $ = /^\s*("(?:\\.|[^"])*"|'(?:\\.|[^'])*'|[^:]+)\s*:\s*typeof\s+([A-Za-z0-9_$]+)\s*;.*$/, I = u.body.split(`
+`), v = [];
+  let w = !1, C = !1;
+  for (const x of I) {
+    const S = x.match($);
+    if (!S) {
+      v.push(x);
+      continue;
+    }
+    const N = S[1].trim(), j = S[2].trim();
+    if (N === t.entryKey) {
+      if (j === t.className)
+        w = !0, v.push(x);
+      else {
+        const g = `${u.indent}${t.entryKey}: typeof ${t.className};`;
+        v.push(g), w = !0, C = !0;
+      }
+      continue;
+    }
+    if (j === t.className) {
+      C = !0;
+      continue;
+    }
+    v.push(x);
+  }
+  if (!w) {
+    const x = `${u.indent}${t.entryKey}: typeof ${t.className};`, S = v.length > 0 && v[v.length - 1] === "" ? v.length - 1 : v.length;
+    v.splice(S, 0, x), C = !0;
+  }
+  if (C) {
+    const x = v.join(`
+`);
+    l = l.slice(0, u.startIndex) + x + l.slice(u.endIndex);
+  }
+  return l;
+}
+function T(e, n) {
+  return `${M(e, n)}Services`;
+}
+function L(e, n) {
+  return `${M(e, n)}Stores`;
+}
+function O(e) {
+  return /^[A-Za-z_$][A-Za-z0-9_$]*$/.test(e) ? e : JSON.stringify(e);
+}
+function _(e, n) {
+  const i = p.relative(e, n).replace(/\\/g, "/").replace(/\.(tsx|ts|d\.ts)$/, "");
+  return i.startsWith(".") ? i : `./${i}`;
+}
+function K(e) {
+  return e.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
+function M(e, n) {
+  const i = p.relative(n, e).replace(/\\/g, "/").split("/");
+  let a = i[0];
+  return i[0] === "modules" && i[1] && (a = i[1]), V(a.replace(/\.d\.ts$/, ""));
+}
+function V(e) {
+  return e.split(/[^a-zA-Z0-9]+/).filter(Boolean).map((n) => n.charAt(0).toUpperCase() + n.slice(1)).join("");
+}
+function U(e, n) {
+  const t = e.split(`
+`);
+  let i = 0;
+  for (let a = 0; a < t.length; a += 1)
+    if (t[a].startsWith("import "))
+      i = a + 1;
+    else if (t[a].trim() !== "")
+      break;
+  return t.splice(i, 0, n), t.join(`
+`);
+}
+function Z(e, n) {
+  const t = e.match(new RegExp(`export interface ${K(n)}\\s*\\{`));
+  if (!t || t.index === void 0)
+    return null;
+  const i = t.index + t[0].length, a = e.indexOf("}", i);
+  if (a === -1)
+    return null;
+  const l = e.slice(i, a), u = l.match(/\n(\s*)\w/), $ = u ? u[1] : "  ";
+  return { body: l, endIndex: a, indent: $, startIndex: i };
+}
+const k = "rvm-toolkit", J = "Service", X = "Store";
+function H(e) {
+  return h(this, void 0, void 0, function* () {
+    var n, t, i;
+    const a = yield E.readFile(e, "utf8"), l = z(e), u = d.createSourceFile(e, a, d.ScriptTarget.Latest, !0, l), I = yield G(u, e, { cache: /* @__PURE__ */ new Map(), resolving: /* @__PURE__ */ new Set() }), v = /* @__PURE__ */ new Set(), w = /* @__PURE__ */ new Set();
+    for (const x of u.statements) {
+      if (!d.isImportDeclaration(x) || x.moduleSpecifier.getText(u).replace(/['"]/g, "") !== k)
+        continue;
+      const N = x.importClause;
+      if (!(!N?.namedBindings || !d.isNamedImports(N.namedBindings)))
+        for (const j of N.namedBindings.elements) {
+          const g = (t = (n = j.propertyName) === null || n === void 0 ? void 0 : n.text) !== null && t !== void 0 ? t : j.name.text, o = j.name.text;
+          g === J && v.add(o), g === X && w.add(o);
+        }
+    }
+    if (v.size === 0 && w.size === 0)
+      return [];
+    const C = [];
+    for (const x of u.statements) {
+      if (!d.isClassDeclaration(x) || !x.name)
+        continue;
+      const S = x.name.text, N = (i = d.getDecorators(x)) !== null && i !== void 0 ? i : [];
+      for (const j of N) {
+        const g = j.expression;
+        if (d.isIdentifier(g)) {
+          const o = v.has(g.text), r = w.has(g.text);
+          o ? C.push({ className: S, entryKey: S, filePath: e, kind: "service" }) : r && C.push({ className: S, entryKey: S, filePath: e, kind: "store" });
+        } else if (d.isCallExpression(g) && d.isIdentifier(g.expression)) {
+          const o = g.expression.text, r = v.has(o), s = w.has(o);
+          if (!r && !s)
+            continue;
+          const [f] = g.arguments;
+          let c = S;
+          const m = yield q(f, I);
+          m && (c = m), C.push({ className: S, entryKey: c, filePath: e, kind: s ? "store" : "service" });
+        }
+      }
+    }
+    return C;
+  });
+}
+function q(e, n) {
+  return h(this, void 0, void 0, function* () {
+    if (!e)
+      return null;
+    if (d.isObjectLiteralExpression(e)) {
+      const t = e.properties.find((i) => d.isPropertyAssignment(i) && d.isIdentifier(i.name) && i.name.text === "id");
+      return t ? b(t.initializer, n) : null;
+    }
+    return b(e, n);
+  });
+}
+function G(e, n, t) {
+  return h(this, void 0, void 0, function* () {
+    const i = W(e), a = yield A(e, n);
+    return {
+      filePath: n,
+      localConsts: i,
+      importedConsts: a,
+      localResolved: /* @__PURE__ */ new Map(),
+      importedResolved: /* @__PURE__ */ new Map(),
+      resolveState: t
+    };
+  });
+}
+function W(e) {
+  const n = /* @__PURE__ */ new Map();
+  for (const t of e.statements)
+    if (d.isVariableStatement(t) && t.declarationList.flags & d.NodeFlags.Const)
+      for (const i of t.declarationList.declarations)
+        !d.isIdentifier(i.name) || !i.initializer || n.set(i.name.text, i.initializer);
+  return n;
+}
+function A(e, n) {
+  return h(this, void 0, void 0, function* () {
+    var t, i;
+    const a = /* @__PURE__ */ new Map();
+    for (const l of e.statements) {
+      if (!d.isImportDeclaration(l) || !l.importClause || !d.isStringLiteralLike(l.moduleSpecifier))
+        continue;
+      const u = l.moduleSpecifier.text, $ = l.importClause.namedBindings;
+      if (!$ || !d.isNamedImports($))
+        continue;
+      const I = yield Q(n, u);
+      if (I)
+        for (const v of $.elements) {
+          const w = (i = (t = v.propertyName) === null || t === void 0 ? void 0 : t.text) !== null && i !== void 0 ? i : v.name.text, C = v.name.text;
+          a.set(C, { importName: w, sourcePath: I });
+        }
+    }
+    return a;
+  });
+}
+function Q(e, n) {
+  return h(this, void 0, void 0, function* () {
+    if (!n.startsWith("."))
+      return null;
+    const t = p.resolve(p.dirname(e), n), a = p.extname(n) ? [t] : [
+      `${t}.ts`,
+      `${t}.tsx`,
+      `${t}.js`,
+      `${t}.jsx`,
+      `${t}.d.ts`,
+      p.join(t, "index.ts"),
+      p.join(t, "index.tsx"),
+      p.join(t, "index.js"),
+      p.join(t, "index.jsx"),
+      p.join(t, "index.d.ts")
+    ];
+    for (const l of a)
+      if (yield oe(l))
+        return l;
+    return null;
+  });
+}
+function b(e, n) {
+  return h(this, void 0, void 0, function* () {
+    if (d.isStringLiteralLike(e) || d.isNoSubstitutionTemplateLiteral(e))
+      return e.text;
+    if (d.isTemplateExpression(e)) {
+      let t = e.head.text;
+      for (const i of e.templateSpans) {
+        const a = yield b(i.expression, n);
+        if (a === null)
+          return null;
+        t += a + i.literal.text;
+      }
+      return t;
+    }
+    if (d.isBinaryExpression(e) && e.operatorToken.kind === d.SyntaxKind.PlusToken) {
+      const t = yield b(e.left, n);
+      if (t === null)
+        return null;
+      const i = yield b(e.right, n);
+      return i === null ? null : t + i;
+    }
+    return d.isIdentifier(e) ? Y(e.text, n) : d.isAsExpression(e) || d.isTypeAssertionExpression(e) || d.isParenthesizedExpression(e) ? b(e.expression, n) : null;
+  });
+}
+function Y(e, n) {
+  return h(this, void 0, void 0, function* () {
+    var t, i;
+    if (n.localResolved.has(e))
+      return (t = n.localResolved.get(e)) !== null && t !== void 0 ? t : null;
+    const a = n.localConsts.get(e);
+    if (a) {
+      const u = yield b(a, n);
+      return n.localResolved.set(e, u), u;
+    }
+    const l = n.importedConsts.get(e);
+    if (l) {
+      if (n.importedResolved.has(e))
+        return (i = n.importedResolved.get(e)) !== null && i !== void 0 ? i : null;
+      const u = yield ee(l, n.resolveState);
+      return n.importedResolved.set(e, u), u;
+    }
+    return null;
+  });
+}
+function ee(e, n) {
+  return h(this, void 0, void 0, function* () {
+    var t;
+    const i = `${e.sourcePath}::${e.importName}`;
+    if (n.cache.has(i))
+      return (t = n.cache.get(i)) !== null && t !== void 0 ? t : null;
+    if (n.resolving.has(i))
+      return null;
+    n.resolving.add(i);
+    const a = yield te(e.sourcePath, e.importName, n);
+    return n.resolving.delete(i), n.cache.set(i, a), a;
+  });
+}
+function te(e, n, t) {
+  return h(this, void 0, void 0, function* () {
+    const i = yield ie(e), l = ne(i).get(n);
+    if (!l)
+      return null;
+    const u = W(i), $ = u.get(l);
+    if (!$)
+      return null;
+    const I = yield A(i, e);
+    return b($, {
+      localConsts: u,
+      importedConsts: I,
+      localResolved: /* @__PURE__ */ new Map(),
+      importedResolved: /* @__PURE__ */ new Map(),
+      resolveState: t
+    });
+  });
+}
+function ne(e) {
+  var n, t, i;
+  const a = /* @__PURE__ */ new Map();
+  for (const l of e.statements)
+    if (d.isVariableStatement(l) && (!((n = l.modifiers) === null || n === void 0) && n.some((u) => u.kind === d.SyntaxKind.ExportKeyword)))
+      for (const u of l.declarationList.declarations)
+        d.isIdentifier(u.name) && a.set(u.name.text, u.name.text);
+    else if (d.isExportDeclaration(l) && l.exportClause && d.isNamedExports(l.exportClause)) {
+      if (l.moduleSpecifier)
+        continue;
+      for (const u of l.exportClause.elements) {
+        const $ = u.name.text, I = (i = (t = u.propertyName) === null || t === void 0 ? void 0 : t.text) !== null && i !== void 0 ? i : u.name.text;
+        a.set($, I);
+      }
+    }
+  return a;
+}
+function ie(e) {
+  return h(this, void 0, void 0, function* () {
+    const n = yield E.readFile(e, "utf8"), t = z(e);
+    return d.createSourceFile(e, n, d.ScriptTarget.Latest, !0, t);
+  });
+}
+function z(e) {
+  return e.endsWith(".tsx") ? d.ScriptKind.TSX : e.endsWith(".ts") || e.endsWith(".d.ts") ? d.ScriptKind.TS : e.endsWith(".jsx") ? d.ScriptKind.JSX : e.endsWith(".js") ? d.ScriptKind.JS : d.ScriptKind.TS;
+}
+function oe(e) {
+  return h(this, void 0, void 0, function* () {
+    try {
+      return yield E.access(e), !0;
+    } catch {
+      return !1;
+    }
+  });
+}
+function ae() {
+  let e, n = "", t = "";
+  function i() {
+    return h(this, void 0, void 0, function* () {
+      const o = yield N(n);
+      for (const r of o)
+        yield l(r);
     });
   }
-  function U() {
-    return u(this, void 0, void 0, function* () {
-      if (!h || (yield N(h)))
+  function a() {
+    return h(this, void 0, void 0, function* () {
+      if (!t || (yield g(t)))
         return;
-      const n = yield A(y);
-      if (n.length === 0) {
-        const r = [
-          `declare module "${D}" {`,
+      const r = yield j(n);
+      if (r.length === 0) {
+        const y = [
+          `declare module "${k}" {`,
           "  interface DiServices {}",
           "}",
           ""
         ].join(`
 `);
-        yield v.writeFile(h, r, "utf8");
+        yield E.writeFile(t, y, "utf8");
         return;
       }
-      const t = [], i = [], o = [];
-      for (const r of n) {
-        const d = yield v.readFile(r, "utf8"), f = P(r), a = L(r), p = C(l.dirname(h), r);
-        d.includes(`export interface ${f}`) && (t.push(`import type { ${f} } from "${p}";`), i.push(f)), d.includes(`export interface ${a}`) && (t.push(`import type { ${a} } from "${p}";`), o.push(a));
+      const s = [], f = [], c = [];
+      for (const y of r) {
+        const D = yield E.readFile(y, "utf8"), R = T(y, n), F = L(y, n), P = _(p.dirname(t), y);
+        D.includes(`export interface ${R}`) && (s.push(`import type { ${R} } from "${P}";`), f.push(R)), D.includes(`export interface ${F}`) && (s.push(`import type { ${F} } from "${P}";`), c.push(F));
       }
-      const s = [
-        ...t,
-        "",
-        `declare module "${D}" {`,
-        i.length ? `  interface DiServices extends ${i.join(", ")} {}` : "  interface DiServices {}",
-        o.length ? `  interface DiStores extends ${o.join(", ")} {}` : "  interface DiStores {}",
-        "}",
-        ""
-      ].join(`
-`);
-      yield v.writeFile(h, s, "utf8");
-    });
-  }
-  function F(e) {
-    return u(this, void 0, void 0, function* () {
-      const n = yield Z(e);
-      for (const t of n)
-        yield ne(t);
-    });
-  }
-  function Z(e) {
-    return u(this, void 0, void 0, function* () {
-      var n, t, i;
-      const o = yield v.readFile(e, "utf8"), s = e.endsWith(".tsx") ? c.ScriptKind.TSX : c.ScriptKind.TS, r = c.createSourceFile(e, o, c.ScriptTarget.Latest, !0, s), f = yield X(r, e, { cache: /* @__PURE__ */ new Map(), resolving: /* @__PURE__ */ new Set() }), a = /* @__PURE__ */ new Set(), p = /* @__PURE__ */ new Set();
-      for (const m of r.statements) {
-        if (!c.isImportDeclaration(m) || m.moduleSpecifier.getText(r).replace(/['"]/g, "") !== D)
-          continue;
-        const E = m.importClause;
-        if (!(!E?.namedBindings || !c.isNamedImports(E.namedBindings)))
-          for (const I of E.namedBindings.elements) {
-            const g = (t = (n = I.propertyName) === null || n === void 0 ? void 0 : n.text) !== null && t !== void 0 ? t : I.name.text, w = I.name.text;
-            g === me && a.add(w), g === pe && p.add(w);
-          }
-      }
-      if (a.size === 0 && p.size === 0)
-        return [];
-      const $ = [];
-      for (const m of r.statements) {
-        if (!c.isClassDeclaration(m) || !m.name)
-          continue;
-        const x = m.name.text, E = (i = c.getDecorators(m)) !== null && i !== void 0 ? i : [];
-        for (const I of E) {
-          const g = I.expression;
-          if (c.isIdentifier(g)) {
-            const w = a.has(g.text), b = p.has(g.text);
-            w ? $.push({ className: x, entryKey: x, filePath: e, kind: "service" }) : b && $.push({ className: x, entryKey: x, filePath: e, kind: "store" });
-          } else if (c.isCallExpression(g) && c.isIdentifier(g.expression)) {
-            const w = g.expression.text, b = a.has(w), z = p.has(w);
-            if (!b && !z)
-              continue;
-            const [fe] = g.arguments;
-            let B = x;
-            const O = yield J(fe, f);
-            O && (B = O), $.push({ className: x, entryKey: B, filePath: e, kind: z ? "store" : "service" });
-          }
-        }
-      }
-      return $;
-    });
-  }
-  function J(e, n) {
-    return u(this, void 0, void 0, function* () {
-      if (!e)
-        return null;
-      if (c.isObjectLiteralExpression(e)) {
-        const t = e.properties.find((i) => c.isPropertyAssignment(i) && c.isIdentifier(i.name) && i.name.text === "id");
-        return t ? S(t.initializer, n) : null;
-      }
-      return S(e, n);
-    });
-  }
-  function X(e, n, t) {
-    return u(this, void 0, void 0, function* () {
-      const i = K(e), o = yield _(e, n);
-      return {
-        filePath: n,
-        localConsts: i,
-        importedConsts: o,
-        localResolved: /* @__PURE__ */ new Map(),
-        importedResolved: /* @__PURE__ */ new Map(),
-        resolveState: t
-      };
-    });
-  }
-  function K(e) {
-    const n = /* @__PURE__ */ new Map();
-    for (const t of e.statements)
-      if (c.isVariableStatement(t) && t.declarationList.flags & c.NodeFlags.Const)
-        for (const i of t.declarationList.declarations)
-          !c.isIdentifier(i.name) || !i.initializer || n.set(i.name.text, i.initializer);
-    return n;
-  }
-  function _(e, n) {
-    return u(this, void 0, void 0, function* () {
-      var t, i;
-      const o = /* @__PURE__ */ new Map();
-      for (const s of e.statements) {
-        if (!c.isImportDeclaration(s) || !s.importClause || !c.isStringLiteralLike(s.moduleSpecifier))
-          continue;
-        const r = s.moduleSpecifier.text, d = s.importClause.namedBindings;
-        if (!d || !c.isNamedImports(d))
-          continue;
-        const f = yield H(n, r);
-        if (f)
-          for (const a of d.elements) {
-            const p = (i = (t = a.propertyName) === null || t === void 0 ? void 0 : t.text) !== null && i !== void 0 ? i : a.name.text, $ = a.name.text;
-            o.set($, { importName: p, sourcePath: f });
-          }
-      }
-      return o;
-    });
-  }
-  function H(e, n) {
-    return u(this, void 0, void 0, function* () {
-      if (!n.startsWith("."))
-        return null;
-      const t = l.resolve(l.dirname(e), n), o = l.extname(n) ? [t] : [
-        `${t}.ts`,
-        `${t}.tsx`,
-        `${t}.js`,
-        `${t}.jsx`,
-        `${t}.d.ts`,
-        l.join(t, "index.ts"),
-        l.join(t, "index.tsx"),
-        l.join(t, "index.js"),
-        l.join(t, "index.jsx"),
-        l.join(t, "index.d.ts")
-      ];
-      for (const s of o)
-        if (yield N(s))
-          return s;
-      return null;
-    });
-  }
-  function S(e, n) {
-    return u(this, void 0, void 0, function* () {
-      if (c.isStringLiteralLike(e) || c.isNoSubstitutionTemplateLiteral(e))
-        return e.text;
-      if (c.isTemplateExpression(e)) {
-        let t = e.head.text;
-        for (const i of e.templateSpans) {
-          const o = yield S(i.expression, n);
-          if (o === null)
-            return null;
-          t += o + i.literal.text;
-        }
-        return t;
-      }
-      if (c.isBinaryExpression(e) && e.operatorToken.kind === c.SyntaxKind.PlusToken) {
-        const t = yield S(e.left, n);
-        if (t === null)
-          return null;
-        const i = yield S(e.right, n);
-        return i === null ? null : t + i;
-      }
-      return c.isIdentifier(e) ? q(e.text, n) : c.isAsExpression(e) || c.isTypeAssertionExpression(e) || c.isParenthesizedExpression(e) ? S(e.expression, n) : null;
-    });
-  }
-  function q(e, n) {
-    return u(this, void 0, void 0, function* () {
-      var t, i;
-      if (n.localResolved.has(e))
-        return (t = n.localResolved.get(e)) !== null && t !== void 0 ? t : null;
-      const o = n.localConsts.get(e);
-      if (o) {
-        const r = yield S(o, n);
-        return n.localResolved.set(e, r), r;
-      }
-      const s = n.importedConsts.get(e);
-      if (s) {
-        if (n.importedResolved.has(e))
-          return (i = n.importedResolved.get(e)) !== null && i !== void 0 ? i : null;
-        const r = yield G(s, n.resolveState);
-        return n.importedResolved.set(e, r), r;
-      }
-      return null;
-    });
-  }
-  function G(e, n) {
-    return u(this, void 0, void 0, function* () {
-      var t;
-      const i = `${e.sourcePath}::${e.importName}`;
-      if (n.cache.has(i))
-        return (t = n.cache.get(i)) !== null && t !== void 0 ? t : null;
-      if (n.resolving.has(i))
-        return null;
-      n.resolving.add(i);
-      const o = yield Q(e.sourcePath, e.importName, n);
-      return n.resolving.delete(i), n.cache.set(i, o), o;
-    });
-  }
-  function Q(e, n, t) {
-    return u(this, void 0, void 0, function* () {
-      const i = yield ee(e), s = Y(i).get(n);
-      if (!s)
-        return null;
-      const r = K(i), d = r.get(s);
-      if (!d)
-        return null;
-      const f = yield _(i, e);
-      return S(d, {
-        localConsts: r,
-        importedConsts: f,
-        localResolved: /* @__PURE__ */ new Map(),
-        importedResolved: /* @__PURE__ */ new Map(),
-        resolveState: t
-      });
-    });
-  }
-  function Y(e) {
-    var n, t, i;
-    const o = /* @__PURE__ */ new Map();
-    for (const s of e.statements)
-      if (c.isVariableStatement(s) && (!((n = s.modifiers) === null || n === void 0) && n.some((r) => r.kind === c.SyntaxKind.ExportKeyword)))
-        for (const r of s.declarationList.declarations)
-          c.isIdentifier(r.name) && o.set(r.name.text, r.name.text);
-      else if (c.isExportDeclaration(s) && s.exportClause && c.isNamedExports(s.exportClause)) {
-        if (s.moduleSpecifier)
-          continue;
-        for (const r of s.exportClause.elements) {
-          const d = r.name.text, f = (i = (t = r.propertyName) === null || t === void 0 ? void 0 : t.text) !== null && i !== void 0 ? i : r.name.text;
-          o.set(d, f);
-        }
-      }
-    return o;
-  }
-  function ee(e) {
-    return u(this, void 0, void 0, function* () {
-      const n = yield v.readFile(e, "utf8"), t = te(e);
-      return c.createSourceFile(e, n, c.ScriptTarget.Latest, !0, t);
-    });
-  }
-  function te(e) {
-    return e.endsWith(".tsx") ? c.ScriptKind.TSX : e.endsWith(".ts") || e.endsWith(".d.ts") ? c.ScriptKind.TS : e.endsWith(".jsx") ? c.ScriptKind.JSX : e.endsWith(".js") ? c.ScriptKind.JS : c.ScriptKind.TS;
-  }
-  function ne(e) {
-    return u(this, void 0, void 0, function* () {
-      const n = yield ie(e.filePath), t = n.existed, i = ue(e.entryKey), o = e.kind === "store" ? L(n.containerPath) : P(n.containerPath), s = e.kind === "store" ? "DiStores" : "DiServices";
-      if (!t) {
-        const f = C(l.dirname(n.containerPath), e.filePath), a = [
-          `import type { ${e.className} } from "${f}";`,
-          "",
-          `export interface ${o} {`,
-          `  ${i}: typeof ${e.className};`,
-          "}",
-          ""
-        ].join(`
-`);
-        yield v.writeFile(n.containerPath, a, "utf8"), yield k(n.containerPath, o, s);
-        return;
-      }
-      const r = yield v.readFile(n.containerPath, "utf8"), d = oe(r, n.containerPath, Object.assign(Object.assign({}, e), {
-        entryKey: i,
-        interfaceName: o
-      }));
-      d !== r && (yield v.writeFile(n.containerPath, d, "utf8")), yield k(n.containerPath, o, s);
-    });
-  }
-  function ie(e) {
-    return u(this, void 0, void 0, function* () {
-      const n = l.resolve(e);
-      let t = l.dirname(n);
-      for (; t.startsWith(y); ) {
-        const r = l.join(t, "container.d.ts");
-        if (yield N(r))
-          return { containerPath: r, existed: !0 };
-        if (t === y)
-          break;
-        t = l.dirname(t);
-      }
-      const o = l.relative(y, n).split(l.sep);
-      let s = y;
-      return o[0] === "modules" && o.length > 1 ? s = l.join(y, "modules", o[1]) : o.length > 0 && o[0] && (s = l.join(y, o[0])), { containerPath: l.join(s, "container.d.ts"), existed: !1 };
-    });
-  }
-  function oe(e, n, t) {
-    const i = C(l.dirname(n), t.filePath), o = `import type { ${t.className} } from "${i}";`;
-    let s = e;
-    new RegExp(`^import type \\{ ${t.className} \\} from \\"${j(i)}\\";`, "m").test(e) || (s = se(s, o));
-    const r = ce(s, t.interfaceName);
-    if (!r) {
       const m = [
+        ...s,
         "",
-        `export interface ${t.interfaceName} {`,
-        `  ${t.entryKey}: typeof ${t.className};`,
+        `declare module "${k}" {`,
+        f.length ? `  interface DiServices extends ${f.join(", ")} {}` : "  interface DiServices {}",
+        c.length ? `  interface DiStores extends ${c.join(", ")} {}` : "  interface DiStores {}",
         "}",
         ""
       ].join(`
 `);
-      return `${s.trimEnd()}
-${m}`;
-    }
-    const d = /^\s*("(?:\\.|[^"])*"|'(?:\\.|[^'])*'|[^:]+)\s*:\s*typeof\s+([A-Za-z0-9_$]+)\s*;.*$/, f = r.body.split(`
-`), a = [];
-    let p = !1, $ = !1;
-    for (const m of f) {
-      const x = m.match(d);
-      if (!x) {
-        a.push(m);
-        continue;
-      }
-      const E = x[1].trim(), I = x[2].trim();
-      if (E === t.entryKey) {
-        if (I === t.className)
-          p = !0, a.push(m);
-        else {
-          const g = `${r.indent}${t.entryKey}: typeof ${t.className};`;
-          a.push(g), p = !0, $ = !0;
-        }
-        continue;
-      }
-      if (I === t.className) {
-        $ = !0;
-        continue;
-      }
-      a.push(m);
-    }
-    if (!p) {
-      const m = `${r.indent}${t.entryKey}: typeof ${t.className};`, x = a.length > 0 && a[a.length - 1] === "" ? a.length - 1 : a.length;
-      a.splice(x, 0, m), $ = !0;
-    }
-    if ($) {
-      const m = a.join(`
-`);
-      s = s.slice(0, r.startIndex) + m + s.slice(r.endIndex);
-    }
-    return s;
+      yield E.writeFile(t, m, "utf8");
+    });
   }
-  function k(e, n, t) {
-    return u(this, void 0, void 0, function* () {
-      if (!h)
-        return;
-      if (!(yield N(h))) {
-        const f = C(l.dirname(h), e), p = [
-          `import type { ${n} } from "${f}";`,
+  function l(o) {
+    return h(this, void 0, void 0, function* () {
+      const r = yield H(o);
+      for (const s of r)
+        yield u(s);
+    });
+  }
+  function u(o) {
+    return h(this, void 0, void 0, function* () {
+      const r = yield $(o.filePath), s = r.existed, f = O(o.entryKey), c = o.kind === "store" ? L(r.containerPath, n) : T(r.containerPath, n), m = o.kind === "store" ? "DiStores" : "DiServices";
+      if (!s) {
+        const R = _(p.dirname(r.containerPath), o.filePath), F = [
+          `import type { ${o.className} } from "${R}";`,
           "",
-          `declare module "${D}" {`,
-          `  interface ${t} extends ${n} {}`,
+          `export interface ${c} {`,
+          `  ${f}: typeof ${o.className};`,
           "}",
           ""
         ].join(`
 `);
-        yield v.writeFile(h, p, "utf8");
+        yield E.writeFile(r.containerPath, F, "utf8"), yield I(r.containerPath, c, m);
         return;
       }
-      const o = yield v.readFile(h, "utf8");
-      let s = o;
-      const r = C(l.dirname(h), e), d = `import type { ${n} } from "${r}";`;
-      new RegExp(`^import type \\{ ${n} \\} from \\"${j(r)}\\";`, "m").test(s) || (s = re(s, d)), s = T(s, "DiServices"), s = T(s, "DiStores"), s = le(s, t), s = de(s, t, n), s !== o && (yield v.writeFile(h, s, "utf8"));
+      const y = yield E.readFile(r.containerPath, "utf8"), D = B(y, r.containerPath, Object.assign(Object.assign({}, o), {
+        entryKey: f,
+        interfaceName: c
+      }));
+      D !== y && (yield E.writeFile(r.containerPath, D, "utf8")), yield I(r.containerPath, c, m);
     });
   }
-  function se(e, n) {
-    const t = e.split(`
+  function $(o) {
+    return h(this, void 0, void 0, function* () {
+      const r = p.resolve(o);
+      let s = p.dirname(r);
+      for (; s.startsWith(n); ) {
+        const y = p.join(s, "container.d.ts");
+        if (yield g(y))
+          return { containerPath: y, existed: !0 };
+        if (s === n)
+          break;
+        s = p.dirname(s);
+      }
+      const c = p.relative(n, r).split(p.sep);
+      let m = n;
+      return c[0] === "modules" && c.length > 1 ? m = p.join(n, "modules", c[1]) : c.length > 0 && c[0] && (m = p.join(n, c[0])), { containerPath: p.join(m, "container.d.ts"), existed: !1 };
+    });
+  }
+  function I(o, r, s) {
+    return h(this, void 0, void 0, function* () {
+      if (!t)
+        return;
+      if (!(yield g(t))) {
+        const R = _(p.dirname(t), o), P = [
+          `import type { ${r} } from "${R}";`,
+          "",
+          `declare module "${k}" {`,
+          `  interface ${s} extends ${r} {}`,
+          "}",
+          ""
+        ].join(`
 `);
-    let i = 0;
-    for (let o = 0; o < t.length; o += 1)
-      if (t[o].startsWith("import "))
-        i = o + 1;
-      else if (t[o].trim() !== "")
+        yield E.writeFile(t, P, "utf8");
+        return;
+      }
+      const c = yield E.readFile(t, "utf8");
+      let m = c;
+      const y = _(p.dirname(t), o), D = `import type { ${r} } from "${y}";`;
+      new RegExp(`^import type \\{ ${r} \\} from \\"${K(y)}\\";`, "m").test(m) || (m = v(m, D)), m = w(m, "DiServices"), m = w(m, "DiStores"), m = C(m, s), m = S(m, s, r), m !== c && (yield E.writeFile(t, m, "utf8"));
+    });
+  }
+  function v(o, r) {
+    const s = o.split(`
+`);
+    let f = 0;
+    for (let c = 0; c < s.length; c += 1)
+      if (s[c].startsWith("import "))
+        f = c + 1;
+      else if (s[c].trim() !== "")
         break;
-    return t.splice(i, 0, n), t.join(`
+    return s.splice(f, 0, r), s.join(`
 `);
   }
-  function re(e, n) {
-    const t = e.split(`
-`);
-    let i = 0;
-    for (let o = 0; o < t.length; o += 1)
-      if (t[o].startsWith("import "))
-        i = o + 1;
-      else if (t[o].trim() !== "")
-        break;
-    return t.splice(i, 0, n), t.join(`
-`);
+  function w(o, r) {
+    const s = new RegExp(`interface ${r},\\s*([^\\{]+)\\{`, "g");
+    return o.replace(s, `interface ${r} extends $1{`);
   }
-  function ce(e, n) {
-    const t = e.match(new RegExp(`export interface ${j(n)}\\s*\\{`));
-    if (!t || t.index === void 0)
-      return null;
-    const i = t.index + t[0].length, o = e.indexOf("}", i);
-    if (o === -1)
-      return null;
-    const s = e.slice(i, o), r = s.match(/\n(\s*)\w/), d = r ? r[1] : "  ";
-    return { body: s, endIndex: o, indent: d, startIndex: i };
+  function C(o, r) {
+    if (new RegExp(`interface\\s+${r}\\b`).test(o))
+      return o;
+    const s = o.match(new RegExp(`declare module ["']${K(k)}["']\\s*\\{`));
+    if (!s || s.index === void 0)
+      return o;
+    const f = s.index + s[0].length, c = x(o, f);
+    if (c === -1)
+      return o;
+    const m = `
+  interface ${r} {}`;
+    return o.slice(0, c) + m + o.slice(c);
   }
-  function T(e, n) {
-    const t = new RegExp(`interface ${n},\\s*([^\\{]+)\\{`, "g");
-    return e.replace(t, `interface ${n} extends $1{`);
-  }
-  function le(e, n) {
-    if (new RegExp(`interface\\s+${n}\\b`).test(e))
-      return e;
-    const t = e.match(new RegExp(`declare module ["']${j(D)}["']\\s*\\{`));
-    if (!t || t.index === void 0)
-      return e;
-    const i = t.index + t[0].length, o = ae(e, i);
-    if (o === -1)
-      return e;
-    const s = `
-  interface ${n} {}`;
-    return e.slice(0, o) + s + e.slice(o);
-  }
-  function ae(e, n) {
-    let t = 1;
-    for (let i = n; i < e.length; i += 1) {
-      const o = e[i];
-      if (o === "{" && (t += 1), o === "}" && (t -= 1), t === 0)
-        return i;
+  function x(o, r) {
+    let s = 1;
+    for (let f = r; f < o.length; f += 1) {
+      const c = o[f];
+      if (c === "{" && (s += 1), c === "}" && (s -= 1), s === 0)
+        return f;
     }
     return -1;
   }
-  function de(e, n, t) {
-    var i;
-    const o = e.match(new RegExp(`interface ${n}(\\s+extends\\s+([^\\{]+))?\\s*\\{`));
-    if (!o || o.index === void 0)
-      return e;
-    const s = (i = o[2]) === null || i === void 0 ? void 0 : i.trim();
-    if (s && new RegExp(`\\b${j(t)}\\b`).test(s))
-      return e;
-    const r = s ? ` extends ${s}, ${t} {` : ` extends ${t} {`, d = o.index, f = d + o[0].length;
-    return e.slice(0, d) + `interface ${n}${r}` + e.slice(f);
+  function S(o, r, s) {
+    var f;
+    const c = o.match(new RegExp(`interface ${r}(\\s+extends\\s+([^\\{]+))?\\s*\\{`));
+    if (!c || c.index === void 0)
+      return o;
+    const m = (f = c[2]) === null || f === void 0 ? void 0 : f.trim();
+    if (m && new RegExp(`\\b${K(s)}\\b`).test(m))
+      return o;
+    const y = m ? ` extends ${m}, ${s} {` : ` extends ${s} {`, D = c.index, R = D + c[0].length;
+    return o.slice(0, D) + `interface ${r}${y}` + o.slice(R);
   }
-  function P(e) {
-    const t = l.relative(y, e).replace(/\\/g, "/").split("/");
-    let i = t[0];
-    return t[0] === "modules" && t[1] && (i = t[1]), `${M(i.replace(/\.d\.ts$/, ""))}Services`;
-  }
-  function L(e) {
-    const t = l.relative(y, e).replace(/\\/g, "/").split("/");
-    let i = t[0];
-    return t[0] === "modules" && t[1] && (i = t[1]), `${M(i.replace(/\.d\.ts$/, ""))}Stores`;
-  }
-  function M(e) {
-    return e.split(/[^a-zA-Z0-9]+/).filter(Boolean).map((n) => n.charAt(0).toUpperCase() + n.slice(1)).join("");
-  }
-  function ue(e) {
-    return /^[A-Za-z_$][A-Za-z0-9_$]*$/.test(e) ? e : JSON.stringify(e);
-  }
-  function C(e, n) {
-    const i = l.relative(e, n).replace(/\\/g, "/").replace(/\.(tsx|ts|d\.ts)$/, "");
-    return i.startsWith(".") ? i : `./${i}`;
-  }
-  function j(e) {
-    return e.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-  }
-  function W(e) {
-    return u(this, void 0, void 0, function* () {
-      const n = yield v.readdir(e, { withFileTypes: !0 }), t = [];
-      for (const i of n) {
-        if (i.name.startsWith("."))
+  function N(o) {
+    return h(this, void 0, void 0, function* () {
+      const r = yield E.readdir(o, { withFileTypes: !0 }), s = [];
+      for (const f of r) {
+        if (f.name.startsWith("."))
           continue;
-        const o = l.join(e, i.name);
-        if (i.isDirectory())
-          t.push(...yield W(o));
-        else if (i.isFile()) {
-          if (!/\.tsx?$/.test(i.name) || i.name.endsWith(".d.ts"))
+        const c = p.join(o, f.name);
+        if (f.isDirectory())
+          s.push(...yield N(c));
+        else if (f.isFile()) {
+          if (!/\.tsx?$/.test(f.name) || f.name.endsWith(".d.ts"))
             continue;
-          t.push(o);
+          s.push(c);
         }
       }
-      return t;
+      return s;
     });
   }
-  function A(e) {
-    return u(this, void 0, void 0, function* () {
-      const n = yield v.readdir(e, { withFileTypes: !0 }), t = [];
-      for (const i of n) {
-        if (i.name.startsWith("."))
+  function j(o) {
+    return h(this, void 0, void 0, function* () {
+      const r = yield E.readdir(o, { withFileTypes: !0 }), s = [];
+      for (const f of r) {
+        if (f.name.startsWith("."))
           continue;
-        const o = l.join(e, i.name);
-        i.isDirectory() ? t.push(...yield A(o)) : i.isFile() && i.name === "container.d.ts" && t.push(o);
+        const c = p.join(o, f.name);
+        f.isDirectory() ? s.push(...yield j(c)) : f.isFile() && f.name === "container.d.ts" && s.push(c);
       }
-      return t;
+      return s;
     });
   }
-  function N(e) {
-    return u(this, void 0, void 0, function* () {
+  function g(o) {
+    return h(this, void 0, void 0, function* () {
       try {
-        return yield v.access(e), !0;
+        return yield E.access(o), !0;
       } catch {
         return !1;
       }
@@ -520,22 +530,22 @@ ${m}`;
   return {
     name: "mvvm-service-di",
     enforce: "pre",
-    configResolved(e) {
-      var n, t;
-      R = e, y = l.resolve((n = R.root) !== null && n !== void 0 ? n : process.cwd(), "src"), h = l.resolve((t = R.root) !== null && t !== void 0 ? t : process.cwd(), "di.d.ts");
+    configResolved(o) {
+      var r, s;
+      e = o, n = p.resolve((r = e.root) !== null && r !== void 0 ? r : process.cwd(), "src"), t = p.resolve((s = e.root) !== null && s !== void 0 ? s : process.cwd(), "di.d.ts");
     },
     buildStart() {
-      return u(this, void 0, void 0, function* () {
-        yield U(), yield V();
+      return h(this, void 0, void 0, function* () {
+        yield a(), yield i();
       });
     },
-    handleHotUpdate(e) {
-      return u(this, void 0, void 0, function* () {
-        e.file.startsWith(y) && (!/\.tsx?$/.test(e.file) || e.file.endsWith(".d.ts") || (yield F(e.file)));
+    handleHotUpdate(o) {
+      return h(this, void 0, void 0, function* () {
+        o.file.startsWith(n) && (!/\.tsx?$/.test(o.file) || o.file.endsWith(".d.ts") || (yield l(o.file)));
       });
     }
   };
 }
 export {
-  ge as mvvmServiceDiPlugin
+  ae as mvvmServiceDiPlugin
 };
