@@ -175,6 +175,35 @@ describe("Model", () => {
     expect(model.service.dirty).toBe(true);
   });
 
+  it("commitField не меняет точку отката других полей", () => {
+    const model = new ExampleModel({ id: 1, name: "alpha", views: 1, tags: [], count: 0 });
+
+    model.name = "beta";
+    model.views = 2;
+
+    model.service.commitField("name");
+    model.views = 3;
+    model.service.reject();
+
+    expect(model.name).toBe("beta");
+    expect(model.views).toBe(1);
+  });
+
+  it("откатывает к falsy committed значениям", () => {
+    const model = new ExampleModel({ id: 1, name: "alpha", views: 1, tags: [], count: 0 });
+
+    model.name = "";
+    model.views = 0;
+    model.service.commit();
+
+    model.name = "next";
+    model.views = 5;
+    model.service.reject();
+
+    expect(model.name).toBe("");
+    expect(model.views).toBe(0);
+  });
+
   it("делает reject до последних закоммиченных значений", () => {
     const model = new ExampleModel({ id: 1, name: "alpha", views: 1, tags: [], count: 0 });
 

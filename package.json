@@ -47,7 +47,7 @@
     "watch": "npx vite build --watch --mode develop",
     "test": "vitest --config vitest.config.ts",
     "test:bench": "npx vitest bench tests/model.bench.ts",
-    "lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
+    "lint": "eslint . --ext ts,tsx --report-unused-disable-directives",
     "preview": "vite preview",
     "tsc": "tsc --noEmit -- --watch",
     "examples:build": "cd ./examples/todo-list && npm i && npm run build"

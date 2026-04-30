@@ -274,7 +274,9 @@ export class Model<T extends Record<string, any> = any > implements TModel<any> 
    * Проверить изменение поля и обновить modified_.
    */
   private checkChange(field: string | keyof T, value: any) {
-    const originValue = (Reflect.get(this.committedData, field)) || (Reflect.get(this.initData, field));
+    const originValue = Object.prototype.hasOwnProperty.call(this.committedData, field)
+      ? Reflect.get(this.committedData, field)
+      : Reflect.get(this.initData, field);
     const isChanged = field && field in this.initData && !isEqual(originValue, value);
 
     runInAction(() => {
@@ -324,10 +326,8 @@ export class Model<T extends Record<string, any> = any > implements TModel<any> 
    * Зафиксировать изменения конкретного поля.
    */
   @action protected commitField<K extends keyof T | string>(field: K) {
-    for (let field in this) {
-      if (field in this.modified_) {
-        Reflect.set(this.committedData, field, this[field])
-      }
+    if (field in this.modified_) {
+      Reflect.set(this.committedData, field, Reflect.get(this, field))
     }
     delete this.modified_[field as keyof T];
 

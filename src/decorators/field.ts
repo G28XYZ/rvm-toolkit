@@ -155,7 +155,7 @@ const forceNoObserve = <TOptions extends object | undefined>(options: TOptions) 
   return { ...options, noObserve: true };
 };
 
-const noObserveImplementation = function noObserve<This, T>(
+const noObserveImplementation = function noObserve(
   optionsOrTarget?: object,
   contextOrKey?: string | symbol | ClassFieldDecoratorContext<unknown, unknown>
 ) {

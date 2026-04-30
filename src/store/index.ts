@@ -162,7 +162,7 @@ export function GetStore<T extends new (...args: any[]) => any>(
   return GetService(storeName as any, "instance") as InstanceType<T>;
 }
 
-export function InjectStore<This, T>(storeName: string | T): (...args: any[]) => any;
+export function InjectStore<_This, T>(storeName: string | T): (...args: any[]) => any;
 export function InjectStore<This, K extends keyof DiStores>(
   storeName: K
 ): (t: undefined, c: ClassFieldDecoratorContext<This, InjectStoreType<K>>) => void;
@@ -175,8 +175,8 @@ export function InjectStore<This, T extends DiStores[keyof DiStores]>(
 export function InjectStore<This, T extends DiStores[keyof DiStores]>(
   storeName: T
 ): (t: ClassAccessorDecoratorTarget<This, InstanceType<T>>, c: ClassAccessorDecoratorContext<This, InstanceType<T>>) => ClassAccessorDecoratorTarget<This, InstanceType<T>> | void;
-export function InjectStore<This, T>(storeName: string | T): (target: object, propertyKey: string | symbol) => void;
-export function InjectStore<This, T>(storeName: string | T) {
+export function InjectStore<_This, T>(storeName: string | T): (target: object, propertyKey: string | symbol) => void;
+export function InjectStore<_This, T>(storeName: string | T) {
   return ((t: any, c: any) => (Inject(storeName as string | T) as any)(t, c)) as any;
 }
 

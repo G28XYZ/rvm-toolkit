@@ -53,40 +53,42 @@ export function view<U, T extends TInstance = TInstance>(
   reactComponent: (props?: Props<T, U>) => ReactElement
 ) {
   return observer((props: Props<T, U, 'Partial'> = {} as any) => {
-    const { resolved, instance } = useMemo(() => {
+    const { viewModel: propViewModel, ...viewProps } = props;
+    const { instance } = useMemo(() => {
       const service = typeof vm === "string" ? GetService(vm) : GetService(vm);
       const resolved = service || (typeof vm !== "string" ? { instance: new vm() } : undefined);
       const instance = resolved?.instance;
-      return { resolved, instance };
+      return { instance };
     }, [vm]);
+    const activeInstance = propViewModel ?? instance;
 
     useEffect(() => {
-      if (!instance) return;
-      if (typeof instance.onInit === "function") instance.onInit();
+      if (!activeInstance) return;
+      if (typeof activeInstance.onInit === "function") activeInstance.onInit();
       return () => {
-        if (typeof instance.onDispose === "function") instance.onDispose();
+        if (typeof activeInstance.onDispose === "function") activeInstance.onDispose();
       };
-    }, [instance]);
+    }, [activeInstance]);
 
-    if (resolved) {
-      const propsFromView = propFromViewMetadata.fields(instance);
+    if (activeInstance) {
+      const propsFromView = propFromViewMetadata.fields(activeInstance);
       const resolvedPropsFromView =
-        propsFromView.length > 0 ? propsFromView : propFromViewMetadata.fields(Object.getPrototypeOf(instance));
-      for (const prop in props) {
+        propsFromView.length > 0 ? propsFromView : propFromViewMetadata.fields(Object.getPrototypeOf(activeInstance));
+      for (const prop in viewProps) {
         if (resolvedPropsFromView instanceof Array) {
           const propMetadata = resolvedPropsFromView.find((item) => item.name === prop);
           if (propMetadata) {
-            const propValue = Reflect.get(props, prop);
+            const propValue = Reflect.get(viewProps, prop);
             assertPropFromViewValue(prop, propValue);
-            Reflect.set(instance, propMetadata.originName, propValue);
+            Reflect.set(activeInstance, propMetadata.originName, propValue);
           }
         }
       }
-      defineMetadata(propFromViewMetadata.metadataKey, resolvedPropsFromView, instance);
-      return reactComponent({ viewModel: instance, ...props });
+      defineMetadata(propFromViewMetadata.metadataKey, resolvedPropsFromView, activeInstance);
+      return reactComponent({ ...viewProps, viewModel: activeInstance } as Props<T, U>);
     }
 
-    return reactComponent({ ...props } as any);
+    return reactComponent({ ...viewProps } as any);
   });
 }
 

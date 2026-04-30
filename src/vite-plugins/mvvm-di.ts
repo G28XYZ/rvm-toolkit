@@ -177,10 +177,12 @@ export function mvvmServiceDiPlugin(): VitePluginLike {
 
       for (const decorator of decorators) {
         const expr = decorator.expression;
-        if (ts.isIdentifier(expr) && serviceIdentifiers.has(expr.text)) {
-          if (serviceIdentifiers.has(expr.text)) {
+        if (ts.isIdentifier(expr)) {
+          const isService = serviceIdentifiers.has(expr.text);
+          const isStore = storeIdentifiers.has(expr.text);
+          if (isService) {
             results.push({ className, entryKey: className, filePath, kind: "service" });
-          } else if (storeIdentifiers.has(expr.text)) {
+          } else if (isStore) {
             results.push({ className, entryKey: className, filePath, kind: "store" });
           }
         } else if (ts.isCallExpression(expr) && ts.isIdentifier(expr.expression)) {

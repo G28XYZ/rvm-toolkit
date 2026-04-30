@@ -58,7 +58,7 @@ export const TODO = (title: string, ...msg: any[]) => {
       Reflect.set(TODOS, `${_TODOS.length}) ${title}`, { msg, get path() { console.info(msg, path); return path } });
     }
   }
-  function callback(...args: any[]) {}
+  function callback(..._args: any[]) {}
 
   return callback;
 };

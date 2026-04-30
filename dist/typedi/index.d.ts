@@ -13,7 +13,7 @@ export type ServiceType<This = any, Args extends any[] = any[]> = {
 /**
  * Декоратор для инъекции сервиса по строковому имени.
  */
-export declare function Inject<This, T>(serviceName: string | T): (...args: any[]) => any;
+export declare function Inject<_This, T>(serviceName: string | T): (...args: any[]) => any;
 export declare function Inject<This, K extends keyof DiServices>(serviceName: K): (t: undefined, c: ClassFieldDecoratorContext<This, InjectType<K>>) => void;
 export declare function Inject<This, K extends keyof DiServices>(serviceName: K): (t: ClassAccessorDecoratorTarget<This, InjectType<K>>, c: ClassAccessorDecoratorContext<This, InjectType<K>>) => ClassAccessorDecoratorTarget<This, InjectType<K>> | void;
 export declare function Inject<This, K extends keyof DiServices>(serviceName: K): (targetOrValue: object | undefined, contextOrKey: ClassFieldDecoratorContext<This, InjectType<K>> | string | symbol) => any;

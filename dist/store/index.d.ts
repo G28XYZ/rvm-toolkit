@@ -69,12 +69,12 @@ export declare function GetStore<K extends keyof DiStores>(storeName: K): Inject
 export declare function GetStore<T extends DiStores[keyof DiStores]>(storeName: T): InstanceType<T>;
 export declare function GetStore<T extends new (...args: any[]) => any>(storeName: T): InstanceType<T>;
 export declare function GetStore(storeName: string): unknown;
-export declare function InjectStore<This, T>(storeName: string | T): (...args: any[]) => any;
+export declare function InjectStore<_This, T>(storeName: string | T): (...args: any[]) => any;
 export declare function InjectStore<This, K extends keyof DiStores>(storeName: K): (t: undefined, c: ClassFieldDecoratorContext<This, InjectStoreType<K>>) => void;
 export declare function InjectStore<This, K extends keyof DiStores>(storeName: K): (t: ClassAccessorDecoratorTarget<This, InjectStoreType<K>>, c: ClassAccessorDecoratorContext<This, InjectStoreType<K>>) => ClassAccessorDecoratorTarget<This, InjectStoreType<K>> | void;
 export declare function InjectStore<This, T extends DiStores[keyof DiStores]>(storeName: T): (t: undefined, c: ClassFieldDecoratorContext<This, InstanceType<T>>) => void;
 export declare function InjectStore<This, T extends DiStores[keyof DiStores]>(storeName: T): (t: ClassAccessorDecoratorTarget<This, InstanceType<T>>, c: ClassAccessorDecoratorContext<This, InstanceType<T>>) => ClassAccessorDecoratorTarget<This, InstanceType<T>> | void;
-export declare function InjectStore<This, T>(storeName: string | T): (target: object, propertyKey: string | symbol) => void;
+export declare function InjectStore<_This, T>(storeName: string | T): (target: object, propertyKey: string | symbol) => void;
 export declare function Store<This, Args extends any[]>(options?: string | IStoreOptions): (t: new (...args: Args) => This, ctx?: ClassDecoratorContext<new (...args: Args) => This>) => void;
 export declare function Store<This, Args extends any[]>(t: new (...args: Args) => This, ctx: ClassDecoratorContext<new (...args: Args) => This>): void;
 export declare function Store<This, Args extends any[]>(t: new (...args: Args) => This): void | (new (...args: Args) => This);

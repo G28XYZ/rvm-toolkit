@@ -17,6 +17,6 @@ export declare function getExecutingFunctionNameByStack(stack: string): string;
 /**
  * Отложенная запись TODO в консоль с уникальными путями.
  */
-export declare const TODO: (title: string, ...msg: any[]) => (...args: any[]) => void;
+export declare const TODO: (title: string, ...msg: any[]) => (..._args: any[]) => void;
 /** Тип конструктора класса. */
 export type TInstance<T = any, A extends any[] = any[]> = new (...args: A) => T;

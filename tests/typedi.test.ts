@@ -49,7 +49,7 @@ describe("typedi", () => {
       }
     }
 
-    const service = GetService("lazy");
+    GetService("lazy");
     expect(created).toBe(0);
 
     const instance = GetService("lazy", "instance");

@@ -155,4 +155,44 @@ describe("view", () => {
     unmount();
     expect(onDispose).toHaveBeenCalledTimes(1);
   });
+
+  it("использует переданный viewModel для PropFromView и жизненного цикла", () => {
+    const onInit = vi.fn();
+    const onDispose = vi.fn();
+
+    class ManualVm {
+      @PropFromView("title")
+      title = "";
+
+      onInit() {
+        onInit(this);
+      }
+
+      onDispose() {
+        onDispose(this);
+      }
+    }
+
+    const provided = new ManualVm();
+    let captured: ManualVm;
+
+    const Component = view<TestProps, typeof ManualVm>(ManualVm, (props) => {
+      const { viewModel } = props as { viewModel: ManualVm };
+      captured = viewModel;
+      return React.createElement("div", null, viewModel.title);
+    });
+    const Wrapped = Component as React.FC<any>;
+
+    const { unmount } = renderWithRoot(
+      React.createElement(Wrapped, { title: "Manual", viewModel: provided })
+    );
+
+    // @ts-ignore
+    expect(captured).toBe(provided);
+    expect(provided.title).toBe("Manual");
+    expect(onInit).toHaveBeenCalledWith(provided);
+
+    unmount();
+    expect(onDispose).toHaveBeenCalledWith(provided);
+  });
 });

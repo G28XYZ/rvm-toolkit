@@ -21,7 +21,7 @@ export type ServiceType<This = any, Args extends any[] = any[]> = {
 /**
  * Декоратор для инъекции сервиса по строковому имени.
  */
-export function Inject<This, T>(serviceName: string | T): (...args: any[]) => any;
+export function Inject<_This, T>(serviceName: string | T): (...args: any[]) => any;
 export function Inject<This, K extends keyof DiServices>(
   serviceName: K
 ): (t: undefined, c: ClassFieldDecoratorContext<This, InjectType<K>>) => void;
