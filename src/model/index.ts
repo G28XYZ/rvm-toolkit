@@ -13,6 +13,7 @@ import {
 import { ModelOptions, ModelService, TModel, IMetadataModel } from "./types";
 import { EXCLUDE_METADATA_KEY, FIELD_METADATA_KEY, SUBMIT_METADATA_KEY, VALIDATION_METADATA_KEY } from "./meta";
 import { getProperty, hasOwnProperty, setProperty } from "../utils/property";
+import { defineModelData, defineModelFieldValue, initLegacyModelFields, initModelField } from "./field-runtime";
 /** */
 const submitMetadata = new SubmitMetadata();
 /** */
@@ -150,36 +151,25 @@ export class Model<T extends Record<string, any> = any > implements TModel<any> 
    * Инициализировать отдельное поле модели.
    */
   protected initField(field: string, options?: { skipValidation?: boolean }) {
-    const fieldInstance = this.getFieldMeta(field);
-    if (fieldInstance) {
-      const fieldName = String(fieldInstance.name);
-      const hasOwnValue = hasOwnProperty(this.initData, fieldName);
-      if (!hasOwnValue) setProperty(this.initData, fieldName, getProperty(this, fieldName));
-      let value = fieldInstance?.factory
-        ? fieldInstance.factory(this.initData, this)
-        : getProperty(this.initData, fieldName);
-      if (value === undefined && !fieldInstance?.factory) {
-        const fallback = getProperty(this, fieldName);
-        if (fallback !== undefined) {
-          value = fallback;
-          setProperty(this.initData, fieldName, fallback);
-        }
-      }
-      this.defineFieldValue(field, value, fieldInstance);
-      if (!options?.skipValidation) this.initValidation(field);
-    }
+    initModelField({
+      target: this,
+      initData: this.initData,
+      field,
+      options,
+      getFieldMeta: (field) => this.getFieldMeta(field),
+      defineFieldValue: (field, value, fieldInstance) => this.defineFieldValue(field, value, fieldInstance),
+      initValidation: (field) => this.initValidation(field),
+    });
   }
 
   private initLegacyFields() {
-    if (this.legacyInitDone) return;
-    const fields = this.getFieldMetaCache().list;
-    if (!fields.some((field) => Object.prototype.hasOwnProperty.call(this, field.name))) return;
-    this.legacyInitDone = true;
-    for (let field of fields) {
-      const fieldName = String(field.name);
-      if (this.initData && fieldName in this.initData) continue;
-      this.initField(fieldName, { skipValidation: true });
-    }
+    this.legacyInitDone = initLegacyModelFields({
+      target: this,
+      initData: this.initData,
+      fields: this.getFieldMetaCache().list,
+      legacyInitDone: this.legacyInitDone,
+      initField: (field, options) => this.initField(field, options),
+    });
   }
 
   // @define_prop
@@ -235,32 +225,15 @@ export class Model<T extends Record<string, any> = any > implements TModel<any> 
     field: string,
     value?: any,
     fieldInstance?: IFieldMetadata<any, any>
-  ) {
-    const resolvedFieldInstance = fieldInstance ?? this.getFieldMeta(field);
-
-    if (value && typeof value === "object") {
-      // TODO - может убрать...
-      // value = this.createObservable(value, field, field);
-    }
-
-    if(resolvedFieldInstance.noObserve) {
-      Reflect.defineProperty(this, resolvedFieldInstance.name, { value })
-    } else {
-
-      value = observable.box(value);
-
-      Reflect.defineProperty(this, resolvedFieldInstance.name, {
-        get: () => value.get(),
-        set: (v) => {
-          runInAction(() => value.set(v));
-          this.checkChange(resolvedFieldInstance.name, value.get());
-        },
-        enumerable: true,
-        configurable: true,
-      });
-    }
-
-    return value;
+  ): any {
+    return defineModelFieldValue({
+      target: this,
+      field,
+      value,
+      fieldInstance,
+      getFieldMeta: (field) => this.getFieldMeta(field),
+      checkChange: (field, value) => this.checkChange(field, value),
+    });
   }
 
   /**
@@ -297,14 +270,12 @@ export class Model<T extends Record<string, any> = any > implements TModel<any> 
    * Применить данные к полям модели.
    */
   private defineData(data: Partial<T>) {
-    const fieldMap = this.getFieldMetaCache().map;
-    for (let field in this) {
-      if (!Object.prototype.hasOwnProperty.call(this, field)) continue;
-      if (fieldMap.has(field)) {
-        setProperty(this, field, getProperty(data, field));
-        this.initField(field);
-      }
-    }
+    defineModelData({
+      target: this,
+      data,
+      fieldMap: this.getFieldMetaCache().map,
+      initField: (field) => this.initField(field),
+    });
   }
 
   /**
