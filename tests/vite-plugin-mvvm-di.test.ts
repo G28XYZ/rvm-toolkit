@@ -4,6 +4,7 @@ import path from "node:path";
 import { afterEach, describe, expect, it } from "vitest";
 import { mvvmServiceDiPlugin } from "../src/vite-plugins";
 import { updateContainerContent } from "../src/vite-plugins/mvvm-di-container";
+import { updateDiContent } from "../src/vite-plugins/mvvm-di-di";
 import { extractEntries } from "../src/vite-plugins/mvvm-di-extract";
 
 describe("mvvmServiceDiPlugin", () => {
@@ -101,6 +102,36 @@ describe("mvvmServiceDiPlugin", () => {
     expect(updated).toContain(`import type { UsersService } from "./users";`);
     expect(updated).toContain(`  "users.service": typeof UsersService;`);
     expect(updated).toContain("  ExistingService: typeof ExistingService;");
+  });
+
+  it("updateDiContent обновляет DiServices только внутри declare module rvm-toolkit", async () => {
+    const root = await createProject();
+    const containerPath = path.join(root, "src", "stores", "container.d.ts");
+    const diPath = path.join(root, "di.d.ts");
+    const content = [
+      "interface DiServices extends ExternalServices {}",
+      "",
+      `declare module "other-module" {`,
+      "  interface DiServices extends OtherServices {}",
+      "}",
+      "",
+      `declare module "rvm-toolkit" {`,
+      "  interface DiStores {}",
+      "}",
+      "",
+    ].join("\n");
+
+    const updated = updateDiContent(content, {
+      containerPath,
+      diPath,
+      diInterfaceName: "DiServices",
+      interfaceName: "StoresServices",
+    });
+
+    expect(updated).toContain(`import type { StoresServices } from "./src/stores/container";`);
+    expect(updated).toContain("interface DiServices extends ExternalServices {}");
+    expect(updated).toContain("interface DiServices extends OtherServices {}");
+    expect(updated).toContain(`declare module "rvm-toolkit" {\n  interface DiStores {}\n  interface DiServices extends StoresServices {}`);
   });
 
   it("обновляет existing di.d.ts с DiServices и DiStores", async () => {

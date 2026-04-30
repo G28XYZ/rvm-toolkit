@@ -1,13 +1,13 @@
 import fs from "node:fs/promises";
 import path from "node:path";
 import {
-  escapeRegExp,
   formatServiceKey,
   inferInterfaceName,
   inferStoresInterfaceName,
   toImportPath,
   updateContainerContent,
 } from "./mvvm-di-container";
+import { createInitialDiContent, type DiInterfaceName, updateDiContent } from "./mvvm-di-di";
 import { extractEntries } from "./mvvm-di-extract";
 import { type ContainerEntry, MVVM_MODULE } from "./mvvm-di-types";
 
@@ -229,140 +229,21 @@ export function mvvmServiceDiPlugin(): VitePluginLike {
   async function ensureDiIncludesContainer(
     containerPath: string,
     interfaceName: string,
-    diInterfaceName: "DiServices" | "DiStores"
+    diInterfaceName: DiInterfaceName
   ) {
     if (!diPath) return;
 
     const diExists = await exists(diPath);
     if (!diExists) {
-      const importPath = toImportPath(path.dirname(diPath), containerPath);
-      const importStatement = `import type { ${interfaceName} } from "${importPath}";`;
-      const initialContent = [
-        importStatement,
-        "",
-        `declare module "${MVVM_MODULE}" {`,
-        `  interface ${diInterfaceName} extends ${interfaceName} {}`,
-        "}",
-        "",
-      ].join("\n");
-      await fs.writeFile(diPath, initialContent, "utf8");
+      await fs.writeFile(diPath, createInitialDiContent({ containerPath, diPath, diInterfaceName, interfaceName }), "utf8");
       return;
     }
 
     const existing = await fs.readFile(diPath, "utf8");
-    let updated = existing;
-
-    const importPath = toImportPath(path.dirname(diPath), containerPath);
-    const importStatement = `import type { ${interfaceName} } from "${importPath}";`;
-
-    if (!new RegExp(`^import type \\{ ${interfaceName} \\} from \\\"${escapeRegExp(importPath)}\\\";`, "m").test(updated)) {
-      updated = insertDiImport(updated, importStatement);
-    }
-
-    updated = normalizeDiDeclaration(updated, "DiServices");
-    updated = normalizeDiDeclaration(updated, "DiStores");
-    updated = ensureDiInterfaceDeclaration(updated, diInterfaceName);
-    updated = ensureDiExtends(updated, diInterfaceName, interfaceName);
-
+    const updated = updateDiContent(existing, { containerPath, diPath, diInterfaceName, interfaceName });
     if (updated !== existing) {
       await fs.writeFile(diPath, updated, "utf8");
     }
-  }
-
-  /**
-   * Вставить import в di.d.ts после существующего блока import statements.
-   *
-   * @param content Текущий текст di.d.ts.
-   * @param importStatement Полная строка import.
-   * @returns Текст di.d.ts с добавленным import.
-   */
-  function insertDiImport(content: string, importStatement: string): string {
-    const lines = content.split("\n");
-    let insertIndex = 0;
-
-    for (let i = 0; i < lines.length; i += 1) {
-      if (lines[i].startsWith("import ")) {
-        insertIndex = i + 1;
-      } else if (lines[i].trim() !== "") {
-        break;
-      }
-    }
-
-    lines.splice(insertIndex, 0, importStatement);
-    return lines.join("\n");
-  }
-
-  /**
-   * Исправить устаревший синтаксис interface DiServices, X {} на extends.
-   *
-   * @param content Текущий текст di.d.ts.
-   * @param name Имя root DI interface.
-   * @returns Текст di.d.ts с нормализованным interface declaration.
-   */
-  function normalizeDiDeclaration(content: string, name: "DiServices" | "DiStores") {
-    const re = new RegExp(`interface ${name},\\s*([^\\{]+)\\{`, "g");
-    return content.replace(re, `interface ${name} extends $1{`);
-  }
-
-  /**
-   * Убедиться, что root DI interface объявлен внутри declare module.
-   *
-   * @param content Текущий текст di.d.ts.
-   * @param name Имя root DI interface.
-   * @returns Текст di.d.ts с добавленным interface, если его не было.
-   */
-  function ensureDiInterfaceDeclaration(content: string, name: "DiServices" | "DiStores") {
-    if (new RegExp(`interface\\s+${name}\\b`).test(content)) {
-      return content;
-    }
-    const moduleMatch = content.match(new RegExp(`declare module ["']${escapeRegExp(MVVM_MODULE)}["']\\s*\\{`));
-    if (!moduleMatch || moduleMatch.index === undefined) return content;
-    const moduleStart = moduleMatch.index + moduleMatch[0].length;
-    const moduleEnd = findMatchingBrace(content, moduleStart);
-    if (moduleEnd === -1) return content;
-    const insertion = `\n  interface ${name} {}`;
-    return content.slice(0, moduleEnd) + insertion + content.slice(moduleEnd);
-  }
-
-  /**
-   * Найти позицию закрывающей скобки для блока, начиная после "{".
-   *
-   * @param content Текст, в котором выполняется поиск.
-   * @param startIndex Индекс сразу после открывающей скобки блока.
-   * @returns Индекс matching "}" или -1, если блок не закрыт.
-   */
-  function findMatchingBrace(content: string, startIndex: number) {
-    let depth = 1;
-    for (let i = startIndex; i < content.length; i += 1) {
-      const char = content[i];
-      if (char === "{") depth += 1;
-      if (char === "}") depth -= 1;
-      if (depth === 0) return i;
-    }
-    return -1;
-  }
-
-  /**
-   * Добавить container interface в extends list root DI interface.
-   *
-   * @param content Текущий текст di.d.ts.
-   * @param diInterfaceName Root interface, который нужно расширить.
-   * @param interfaceName Container interface, который должен быть в extends.
-   * @returns Текст di.d.ts с обновленным extends list.
-   */
-  function ensureDiExtends(content: string, diInterfaceName: "DiServices" | "DiStores", interfaceName: string) {
-    const match = content.match(new RegExp(`interface ${diInterfaceName}(\\s+extends\\s+([^\\{]+))?\\s*\\{`));
-    if (!match || match.index === undefined) return content;
-
-    const extendsList = match[2]?.trim();
-    if (extendsList && new RegExp(`\\b${escapeRegExp(interfaceName)}\\b`).test(extendsList)) {
-      return content;
-    }
-
-    const insertion = extendsList ? ` extends ${extendsList}, ${interfaceName} {` : ` extends ${interfaceName} {`;
-    const start = match.index;
-    const end = start + match[0].length;
-    return content.slice(0, start) + `interface ${diInterfaceName}${insertion}` + content.slice(end);
   }
 
   /**
