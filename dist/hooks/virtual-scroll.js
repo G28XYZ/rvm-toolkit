@@ -1,84 +1,142 @@
-import { _ as k, a as I, b as m, c as v } from "../tslib.es6-DQYNRcek.js";
-import { makeObservable as L, action as w, observable as y } from "mobx";
-import { useMemo as A, useEffect as f } from "react";
-let P = (() => {
-  var e, r, o, s, n, h;
-  let c = [], _, p = [], i = [], d, u = [], H = [], M, T, b;
-  return e = class {
+import { _ as f, a as H, b as o, c as l } from "../tslib.es6-DQYNRcek.js";
+import { makeObservable as K, action as m, observable as b, reaction as N } from "mobx";
+import { useMemo as Q, useState as U, useEffect as M } from "react";
+let X = (() => {
+  var s, c, h, t, d, n, p, u, w, _;
+  let a = [], g, v = [], S = [], x, k = [], z = [], V, I = [], O = [], y, E = [], R = [], F, L, W, A, P;
+  return s = class {
+    /** Текущий scrollTop контейнера, нормализованный к значению >= 0. */
     get scrollTop() {
-      return k(this, r, "f");
+      return f(this, c, "f");
     }
-    set scrollTop(t) {
-      I(this, r, t, "f");
+    set scrollTop(e) {
+      H(this, c, e, "f");
     }
+    /** Текущая видимая высота scroll-контейнера, нормализованная к значению >= 0. */
     get viewportHeight() {
-      return k(this, o, "f");
+      return f(this, h, "f");
     }
-    set viewportHeight(t) {
-      I(this, o, t, "f");
+    set viewportHeight(e) {
+      H(this, h, e, "f");
     }
-    constructor({ rowHeight: t, overscan: a = 0 }) {
-      r.set(this, (m(this, c), m(this, p, 0))), o.set(this, (m(this, i), m(this, u, 0))), this.overscan = m(this, H), this.rowHeight = t > 0 ? t : 1, this.overscan = Math.max(0, a), L(this);
+    /** Фиксированная высота одной строки; значения <= 0 заменяются на 1. */
+    get rowHeight() {
+      return f(this, t, "f");
     }
-    setScrollTop(t) {
-      this.scrollTop = Math.max(0, t);
+    set rowHeight(e) {
+      H(this, t, e, "f");
     }
-    setViewportHeight(t) {
-      this.viewportHeight = Math.max(0, t);
+    /** Количество дополнительных строк до и после viewport для предзагрузки. */
+    get overscan() {
+      return f(this, d, "f");
     }
-    updateMetrics(t, a) {
-      this.scrollTop = Math.max(0, t), this.viewportHeight = Math.max(0, a);
+    set overscan(e) {
+      H(this, d, e, "f");
     }
-    setRowHeight(t) {
-      this.rowHeight = t > 0 ? t : 1;
+    /**
+     * Создать runtime виртуального списка.
+     *
+     * @param options.rowHeight Фиксированная высота строки в пикселях.
+     * @param options.overscan Количество дополнительных строк до/после viewport.
+     */
+    constructor({ rowHeight: e, overscan: i = 0 }) {
+      c.set(this, (o(this, a), o(this, v, 0))), h.set(this, (o(this, S), o(this, k, 0))), t.set(this, (o(this, z), o(this, I, 1))), d.set(this, (o(this, O), o(this, E, 0))), o(this, R), this.rowHeight = e > 0 ? e : 1, this.overscan = Math.max(0, i), K(this);
     }
-    setOverscan(t) {
-      this.overscan = Math.max(0, t);
+    /**
+     * Обновить текущую позицию scroll.
+     *
+     * @param value Новый scrollTop контейнера.
+     */
+    setScrollTop(e) {
+      this.scrollTop = Math.max(0, e);
     }
-    getSlice(t) {
-      const a = t.length, g = this.rowHeight > 0 ? this.rowHeight : 1, S = Math.max(0, this.scrollTop), E = Math.max(0, this.viewportHeight), x = Math.max(0, this.overscan), O = a * g, V = Math.max(0, Math.floor(S / g) - x), z = Math.min(a, Math.ceil((S + E) / g) + x), F = t.slice(V, z);
-      return { total: a, totalHeight: O, startIndex: V, endIndex: z, visibleItems: F };
+    /**
+     * Обновить высоту viewport.
+     *
+     * @param value Новая clientHeight scroll-контейнера.
+     */
+    setViewportHeight(e) {
+      this.viewportHeight = Math.max(0, e);
     }
-  }, r = /* @__PURE__ */ new WeakMap(), o = /* @__PURE__ */ new WeakMap(), (() => {
-    const l = typeof Symbol == "function" && Symbol.metadata ? /* @__PURE__ */ Object.create(null) : void 0;
-    _ = [y], d = [y], M = [(s = w).bound.bind(s)], T = [(n = w).bound.bind(n)], b = [(h = w).bound.bind(h)], v(e, null, _, { kind: "accessor", name: "scrollTop", static: !1, private: !1, access: { has: (t) => "scrollTop" in t, get: (t) => t.scrollTop, set: (t, a) => {
-      t.scrollTop = a;
-    } }, metadata: l }, p, i), v(e, null, d, { kind: "accessor", name: "viewportHeight", static: !1, private: !1, access: { has: (t) => "viewportHeight" in t, get: (t) => t.viewportHeight, set: (t, a) => {
-      t.viewportHeight = a;
-    } }, metadata: l }, u, H), v(e, null, M, { kind: "method", name: "setScrollTop", static: !1, private: !1, access: { has: (t) => "setScrollTop" in t, get: (t) => t.setScrollTop }, metadata: l }, null, c), v(e, null, T, { kind: "method", name: "setViewportHeight", static: !1, private: !1, access: { has: (t) => "setViewportHeight" in t, get: (t) => t.setViewportHeight }, metadata: l }, null, c), v(e, null, b, { kind: "method", name: "updateMetrics", static: !1, private: !1, access: { has: (t) => "updateMetrics" in t, get: (t) => t.updateMetrics }, metadata: l }, null, c), l && Object.defineProperty(e, Symbol.metadata, { enumerable: !0, configurable: !0, writable: !0, value: l });
-  })(), e;
+    /**
+     * Обновить scrollTop и viewportHeight одной MobX action.
+     *
+     * @param scrollTop Новый scrollTop контейнера.
+     * @param viewportHeight Новая clientHeight scroll-контейнера.
+     */
+    updateMetrics(e, i) {
+      this.scrollTop = Math.max(0, e), this.viewportHeight = Math.max(0, i);
+    }
+    /**
+     * Обновить фиксированную высоту строки.
+     *
+     * @param rowHeight Новая высота строки в пикселях; значения <= 0 заменяются на 1.
+     */
+    setRowHeight(e) {
+      this.rowHeight = e > 0 ? e : 1;
+    }
+    /**
+     * Обновить overscan.
+     *
+     * @param overscan Количество дополнительных строк до/после viewport.
+     */
+    setOverscan(e) {
+      this.overscan = Math.max(0, e);
+    }
+    /**
+     * Рассчитать видимый slice для списка.
+     *
+     * @param items Полный список элементов.
+     * @returns Данные для отрисовки виртуального списка.
+     */
+    getSlice(e) {
+      const i = e.length, T = this.rowHeight > 0 ? this.rowHeight : 1, j = Math.max(0, this.scrollTop), B = Math.max(0, this.viewportHeight), q = Math.max(0, this.overscan), C = i * T, D = Math.max(0, Math.floor(j / T) - q), G = Math.min(i, Math.ceil((j + B) / T) + q), J = e.slice(D, G);
+      return { total: i, totalHeight: C, startIndex: D, endIndex: G, visibleItems: J };
+    }
+  }, c = /* @__PURE__ */ new WeakMap(), h = /* @__PURE__ */ new WeakMap(), t = /* @__PURE__ */ new WeakMap(), d = /* @__PURE__ */ new WeakMap(), (() => {
+    const r = typeof Symbol == "function" && Symbol.metadata ? /* @__PURE__ */ Object.create(null) : void 0;
+    g = [b], x = [b], V = [b], y = [b], F = [(n = m).bound.bind(n)], L = [(p = m).bound.bind(p)], W = [(u = m).bound.bind(u)], A = [(w = m).bound.bind(w)], P = [(_ = m).bound.bind(_)], l(s, null, g, { kind: "accessor", name: "scrollTop", static: !1, private: !1, access: { has: (e) => "scrollTop" in e, get: (e) => e.scrollTop, set: (e, i) => {
+      e.scrollTop = i;
+    } }, metadata: r }, v, S), l(s, null, x, { kind: "accessor", name: "viewportHeight", static: !1, private: !1, access: { has: (e) => "viewportHeight" in e, get: (e) => e.viewportHeight, set: (e, i) => {
+      e.viewportHeight = i;
+    } }, metadata: r }, k, z), l(s, null, V, { kind: "accessor", name: "rowHeight", static: !1, private: !1, access: { has: (e) => "rowHeight" in e, get: (e) => e.rowHeight, set: (e, i) => {
+      e.rowHeight = i;
+    } }, metadata: r }, I, O), l(s, null, y, { kind: "accessor", name: "overscan", static: !1, private: !1, access: { has: (e) => "overscan" in e, get: (e) => e.overscan, set: (e, i) => {
+      e.overscan = i;
+    } }, metadata: r }, E, R), l(s, null, F, { kind: "method", name: "setScrollTop", static: !1, private: !1, access: { has: (e) => "setScrollTop" in e, get: (e) => e.setScrollTop }, metadata: r }, null, a), l(s, null, L, { kind: "method", name: "setViewportHeight", static: !1, private: !1, access: { has: (e) => "setViewportHeight" in e, get: (e) => e.setViewportHeight }, metadata: r }, null, a), l(s, null, W, { kind: "method", name: "updateMetrics", static: !1, private: !1, access: { has: (e) => "updateMetrics" in e, get: (e) => e.updateMetrics }, metadata: r }, null, a), l(s, null, A, { kind: "method", name: "setRowHeight", static: !1, private: !1, access: { has: (e) => "setRowHeight" in e, get: (e) => e.setRowHeight }, metadata: r }, null, a), l(s, null, P, { kind: "method", name: "setOverscan", static: !1, private: !1, access: { has: (e) => "setOverscan" in e, get: (e) => e.setOverscan }, metadata: r }, null, a), r && Object.defineProperty(s, Symbol.metadata, { enumerable: !0, configurable: !0, writable: !0, value: r });
+  })(), s;
 })();
-const D = ({ overscan: e = 0, rowHeight: r, targetRef: o }) => {
-  const s = A(() => new P({ rowHeight: r, overscan: e }), []);
-  return f(() => {
+const te = ({ overscan: s = 0, rowHeight: c, targetRef: h }) => {
+  const t = Q(() => new X({ rowHeight: c, overscan: s }), []), [, d] = U(0);
+  return M(() => N(() => [t.scrollTop, t.viewportHeight, t.rowHeight, t.overscan], () => d((n) => n + 1)), [t]), M(() => {
     if (typeof window > "u")
       return;
-    let n = null, h = null, c = !0;
-    const _ = (i) => {
-      const d = () => s.setScrollTop(i.scrollTop), u = () => s.setViewportHeight(i.clientHeight);
-      s.updateMetrics(i.scrollTop, i.clientHeight), i.addEventListener("scroll", d, { passive: !0 }), window.addEventListener("resize", u), n = () => {
-        i.removeEventListener("scroll", d), window.removeEventListener("resize", u);
+    let n = null, p = null, u = !0;
+    const w = (a) => {
+      const g = () => t.setScrollTop(a.scrollTop), v = () => t.setViewportHeight(a.clientHeight);
+      t.updateMetrics(a.scrollTop, a.clientHeight), a.addEventListener("scroll", g, { passive: !0 }), window.addEventListener("resize", v), n = () => {
+        a.removeEventListener("scroll", g), window.removeEventListener("resize", v);
       };
-    }, p = () => {
-      if (!c)
+    }, _ = () => {
+      if (!u)
         return;
-      const i = o.current;
-      if (i) {
-        _(i);
+      const a = h.current;
+      if (a) {
+        w(a);
         return;
       }
-      h = window.requestAnimationFrame(p);
+      p = window.requestAnimationFrame(_);
     };
-    return p(), () => {
-      c = !1, h !== null && window.cancelAnimationFrame(h), n && n();
+    return _(), () => {
+      u = !1, p !== null && window.cancelAnimationFrame(p), n && n();
     };
-  }, [s, o]), f(() => {
-    s.setRowHeight(r);
-  }, [s, r]), f(() => {
-    s.setOverscan(e);
-  }, [s, e]), s;
+  }, [t, h]), M(() => {
+    t.setRowHeight(c);
+  }, [t, c]), M(() => {
+    t.setOverscan(s);
+  }, [t, s]), t;
 };
 export {
-  P as VirtualScroll,
-  D as useVirtualScroller
+  X as VirtualScroll,
+  te as useVirtualScroller
 };

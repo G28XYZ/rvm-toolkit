@@ -3,6 +3,7 @@ import { afterEach, beforeAll, describe, expect, it } from "vitest";
 import { act } from "react";
 import { createRoot, type Root } from "react-dom/client";
 import { useEffect, useLayoutEffect, useRef } from "react";
+import { observer } from "mobx-react";
 import { useVirtualScroller, type VirtualScroll } from "../src/hooks";
 
 type TestProps = {
@@ -49,6 +50,68 @@ describe("useVirtualScroller", () => {
     });
 
     return <div ref={ref} />;
+  };
+
+  const SliceComponent = observer(({
+    rowHeight,
+    overscan,
+    initialScrollTop,
+    initialViewportHeight,
+  }: TestProps) => {
+    const ref = useRef<HTMLDivElement | null>(null);
+    const scroller = useVirtualScroller({ targetRef: ref, rowHeight, overscan });
+    const items = Array.from({ length: 50 }, (_, i) => i);
+    const slice = scroller.getSlice(items);
+
+    useLayoutEffect(() => {
+      const container = ref.current;
+      if (!container) return;
+      if (typeof initialViewportHeight === "number") {
+        setClientHeight(container, initialViewportHeight);
+      }
+      if (typeof initialScrollTop === "number") {
+        container.scrollTop = initialScrollTop;
+      }
+    }, [initialScrollTop, initialViewportHeight]);
+
+    return (
+      <div
+        ref={ref}
+        data-end={slice.endIndex}
+        data-start={slice.startIndex}
+      />
+    );
+  });
+
+  const PlainSliceComponent = ({
+    rowHeight,
+    overscan,
+    initialScrollTop,
+    initialViewportHeight,
+  }: TestProps) => {
+    const ref = useRef<HTMLDivElement | null>(null);
+    const scroller = useVirtualScroller({ targetRef: ref, rowHeight, overscan });
+    const items = Array.from({ length: 50 }, (_, i) => i);
+    const slice = scroller.getSlice(items);
+
+    useLayoutEffect(() => {
+      const container = ref.current;
+      if (!container) return;
+      if (typeof initialViewportHeight === "number") {
+        setClientHeight(container, initialViewportHeight);
+      }
+      if (typeof initialScrollTop === "number") {
+        container.scrollTop = initialScrollTop;
+      }
+    }, [initialScrollTop, initialViewportHeight]);
+
+    return (
+      <div
+        ref={ref}
+        data-end={slice.endIndex}
+        data-start={slice.startIndex}
+      />
+    );
   };
 
   beforeAll(() => {
@@ -167,5 +230,81 @@ describe("useVirtualScroller", () => {
     expect(slice.startIndex).toBe(0);
     expect(slice.endIndex).toBe(8);
     expect(slice.totalHeight).toBe(1000);
+  });
+
+  it("перерисовывает observer view после изменения rowHeight и overscan", async () => {
+    host = document.createElement("div");
+    document.body.appendChild(host);
+    root = createRoot(host);
+
+    await act(async () => {
+      root?.render(
+        <SliceComponent
+          rowHeight={10}
+          overscan={0}
+          initialScrollTop={40}
+          initialViewportHeight={80}
+        />
+      );
+    });
+
+    await act(async () => {
+      await new Promise<void>((resolve) => {
+        window.requestAnimationFrame(() => resolve());
+      });
+    });
+
+    const container = host.firstElementChild as HTMLDivElement;
+    expect(container.dataset.start).toBe("4");
+    expect(container.dataset.end).toBe("12");
+
+    await act(async () => {
+      root?.render(
+        <SliceComponent
+          rowHeight={20}
+          overscan={2}
+          initialScrollTop={40}
+          initialViewportHeight={80}
+        />
+      );
+    });
+
+    expect(container.dataset.start).toBe("0");
+    expect(container.dataset.end).toBe("8");
+  });
+
+  it("перерисовывает обычный React component после scroll", async () => {
+    host = document.createElement("div");
+    document.body.appendChild(host);
+    root = createRoot(host);
+
+    await act(async () => {
+      root?.render(
+        <PlainSliceComponent
+          rowHeight={10}
+          overscan={0}
+          initialScrollTop={0}
+          initialViewportHeight={50}
+        />
+      );
+    });
+
+    await act(async () => {
+      await new Promise<void>((resolve) => {
+        window.requestAnimationFrame(() => resolve());
+      });
+    });
+
+    const container = host.firstElementChild as HTMLDivElement;
+    expect(container.dataset.start).toBe("0");
+    expect(container.dataset.end).toBe("5");
+
+    await act(async () => {
+      container.scrollTop = 30;
+      container.dispatchEvent(new Event("scroll"));
+    });
+
+    expect(container.dataset.start).toBe("3");
+    expect(container.dataset.end).toBe("8");
   });
 });
