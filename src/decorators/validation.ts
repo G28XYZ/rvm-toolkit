@@ -1,26 +1,8 @@
 import { DecoratorCallbackType, Model } from "../model";
 import { ValidationMetadata } from "../model/data";
 import { getOwnMetadata, defineMetadata } from "../utils";
-import { isLegacyPropertyDecoratorArgs, isDecoratorContext } from "../utils/decorators";
+import { isLegacyPropertyDecoratorArgs, isDecoratorContext, registerPrototypeMetadata } from "../utils/decorators";
 import { AnyFieldDecorator } from "./types";
-
-const protoValidationRegistry = new WeakMap<object, Set<string>>();
-
-const registerValidationMetadata = (proto: object, instance: ValidationMetadata) => {
-  if (!proto) return;
-  let registry = protoValidationRegistry.get(proto);
-  if (!registry) {
-    registry = new Set<string>();
-    protoValidationRegistry.set(proto, registry);
-  }
-  const name = String(instance.name);
-  if (registry.has(name)) return;
-  const list = getOwnMetadata(instance.metadataKey, proto, new Array<ValidationMetadata>());
-  if (!list.some((item) => item.name === name)) {
-    defineMetadata(instance.metadataKey, [...list, instance], proto);
-  }
-  registry.add(name);
-};
 
 /**
  * Декоратор свойства класса для поля модели {@link field}.
@@ -44,7 +26,7 @@ export function validation<This, T>(fn: DecoratorCallbackType<T, This>): any {
   const define = (c: ClassFieldDecoratorContext<Model<T>, T>) => {
     const instance = new ValidationMetadata({ callback: fn, name: String(c.name) });
     c.addInitializer(function (this: This) {
-      registerValidationMetadata(Object.getPrototypeOf(this as object), instance);
+      registerPrototypeMetadata(Object.getPrototypeOf(this as object), instance);
     } as any);
   };
 

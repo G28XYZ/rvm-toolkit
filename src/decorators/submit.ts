@@ -1,26 +1,8 @@
 import { DecoratorCallbackType } from "../model";
 import { SubmitMetadata } from "../model/data";
 import { getOwnMetadata, defineMetadata } from "../utils";
-import { isLegacyPropertyDecoratorArgs, isDecoratorContext } from "../utils/decorators";
+import { isLegacyPropertyDecoratorArgs, isDecoratorContext, registerPrototypeMetadata } from "../utils/decorators";
 import { AnyFieldDecorator } from "./types";
-
-const protoSubmitRegistry = new WeakMap<object, Set<string>>();
-
-const registerSubmitMetadata = (proto: object, instance: SubmitMetadata) => {
-  if (!proto) return;
-  let registry = protoSubmitRegistry.get(proto);
-  if (!registry) {
-    registry = new Set<string>();
-    protoSubmitRegistry.set(proto, registry);
-  }
-  const name = String(instance.name);
-  if (registry.has(name)) return;
-  const list = getOwnMetadata(instance.metadataKey, proto, new Array<SubmitMetadata>());
-  if (!list.some((item) => item.name === name)) {
-    defineMetadata(instance.metadataKey, [...list, instance], proto);
-  }
-  registry.add(name);
-};
 
 /**
  * Декоратор для преобразования поля при сериализации через {@link Model.dumpData}.
@@ -43,7 +25,7 @@ export function submit<This, T>(fn: DecoratorCallbackType<T, This>) {
   const define = (c: ClassFieldDecoratorContext<This, T>) => {
     const instance = new SubmitMetadata({ callback: fn, name: String(c.name) });
     c.addInitializer(function (this: This) {
-      registerSubmitMetadata(Object.getPrototypeOf(this as object), instance);
+      registerPrototypeMetadata(Object.getPrototypeOf(this as object), instance);
     });
   };
 
