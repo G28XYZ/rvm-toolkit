@@ -171,7 +171,14 @@ export interface IFieldMetadata<T = any, I = any> extends IMetadataModel {
    * @todo - еще не реализован, доделать
    **/
   mapping?: (data: T, instance: I) => any;
-  /** не наблюдаемое поле */
+  /**
+   * Не делать поле observable.
+   *
+   * Поле останется частью модели для init/dump/submit/validation, но Model
+   * определит его как обычное data property без mobx.box и без dirty tracking
+   * при присваивании. Используйте для служебных значений, ссылок на внешние
+   * объекты или данных, изменения которых не должны триггерить реактивность.
+   */
   noObserve?: boolean;
   /** имя поля модели */
   name: string;

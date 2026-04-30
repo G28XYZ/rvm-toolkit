@@ -29,15 +29,22 @@ type FieldDecorator = {
   // Фабрика декоратора с опциями: @field({ ... }) prop;
   <This, T = unknown>(options: FieldOptions<This>): AnyFieldDecorator<This, T>;
   
-  // Свойство noObserve
+  /**
+   * Вариант @field для полей без observable wrapper.
+   *
+   * @field.noObserve сохраняет поле в metadata модели, но значение хранится
+   * как обычное свойство: без mobx.box, без setter dirty tracking и без
+   * реактивных уведомлений при изменении. Поле все еще участвует в init/dump
+   * и может использовать factory/mapping из переданных options.
+   */
   noObserve: {
-    // @field.noObserve prop;
+    /** Декоратор без опций: @field.noObserve prop; */
     <This, T>(
       targetOrValue: object | undefined,
       contextOrKey: ClassFieldDecoratorContext<This, T> | string | symbol
     ): any;
     
-    // @field.noObserve() / @field.noObserve({ ... })
+    /** Фабрика декоратора: @field.noObserve() / @field.noObserve({ ... }) */
     <This, T = unknown>(options?: FieldOptions<This>): AnyFieldDecorator<This, T>;
   };
 };
@@ -45,6 +52,8 @@ type FieldDecorator = {
 /**
  * Декоратор для поля класса (автоматом вешает observable на поле)
  * обозначает свойство как поле модели, которое обрабатывается/валидируется/исключается при изменении/отправке
+ *
+ * Для поля без observable wrapper используйте @field.noObserve.
  */
 export const field: FieldDecorator = function field<This, T>(
   optionsOrTarget?: object,

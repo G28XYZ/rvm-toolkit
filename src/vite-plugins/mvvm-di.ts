@@ -196,7 +196,7 @@ export function mvvmServiceDiPlugin(): VitePluginLike {
     const absolute = path.resolve(filePath);
     let currentDir = path.dirname(absolute);
 
-    while (currentDir.startsWith(srcRoot)) {
+    while (isInsideDir(srcRoot, currentDir)) {
       const candidate = path.join(currentDir, "container.d.ts");
       if (await exists(candidate)) {
         return { containerPath: candidate, existed: true };
@@ -430,6 +430,18 @@ export function mvvmServiceDiPlugin(): VitePluginLike {
     }
   }
 
+  /**
+   * Проверить, что path находится внутри directory path, без prefix false positives.
+   *
+   * @param dir Абсолютный путь к root directory.
+   * @param targetPath Абсолютный путь к проверяемому файлу или директории.
+   * @returns true, если targetPath равен dir или находится внутри него.
+   */
+  function isInsideDir(dir: string, targetPath: string): boolean {
+    const relative = path.relative(dir, targetPath);
+    return relative === "" || (!relative.startsWith("..") && !path.isAbsolute(relative));
+  }
+
   return {
     name: "mvvm-service-di",
     enforce: "pre",
@@ -443,7 +455,7 @@ export function mvvmServiceDiPlugin(): VitePluginLike {
       await scanAndUpdateAll();
     },
     async handleHotUpdate(ctx) {
-      if (!ctx.file.startsWith(srcRoot)) return;
+      if (!isInsideDir(srcRoot, ctx.file)) return;
       if (!/\.tsx?$/.test(ctx.file) || ctx.file.endsWith(".d.ts")) return;
       await processFile(ctx.file);
     },

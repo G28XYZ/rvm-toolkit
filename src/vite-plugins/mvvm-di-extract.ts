@@ -223,7 +223,7 @@ async function resolveImportSource(fromFilePath: string, moduleName: string): Pr
   const basePath = path.resolve(path.dirname(fromFilePath), moduleName);
   const ext = path.extname(moduleName);
   const candidates = ext
-    ? [basePath]
+    ? buildExplicitImportCandidates(basePath, ext)
     : [
         `${basePath}.ts`,
         `${basePath}.tsx`,
@@ -242,6 +242,30 @@ async function resolveImportSource(fromFilePath: string, moduleName: string): Pr
   }
 
   return null;
+}
+
+/**
+ * Построить candidates для import specifier с явным extension.
+ *
+ * TypeScript projects с NodeNext/Bundler resolution часто импортируют
+ * исходный .ts файл через runtime specifier "./file.js". В таком случае
+ * scanner должен читать .ts/.tsx source, если .js файла рядом нет.
+ *
+ * @param basePath Абсолютный путь, полученный из import specifier.
+ * @param ext Extension из import specifier.
+ * @returns Candidate paths в порядке resolution priority.
+ */
+function buildExplicitImportCandidates(basePath: string, ext: string): string[] {
+  const candidates = [basePath];
+  if (ext !== ".js" && ext !== ".jsx") return candidates;
+
+  const withoutExt = basePath.slice(0, -ext.length);
+  if (ext === ".js") {
+    candidates.push(`${withoutExt}.ts`, `${withoutExt}.tsx`, `${withoutExt}.d.ts`);
+  } else {
+    candidates.push(`${withoutExt}.tsx`, `${withoutExt}.ts`);
+  }
+  return candidates;
 }
 
 /**
