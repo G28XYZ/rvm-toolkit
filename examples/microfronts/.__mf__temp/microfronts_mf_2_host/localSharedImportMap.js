@@ -223,7 +223,7 @@
                   entryGlobalName: "mf5ka",
                   name: "mf5ka",
                   type: "module",
-                  entry: "./microfront/5ka-microfront/remoteEntry.js",
+                  entry: "http://localhost:5175/remoteEntry.js",
                   shareScope: "default",
                 }
           ,
@@ -231,7 +231,7 @@
                   entryGlobalName: "mfauchan",
                   name: "mfauchan",
                   type: "module",
-                  entry: "./microfront/auchan-microfront/remoteEntry.js",
+                  entry: "http://localhost:5174/remoteEntry.js",
                   shareScope: "default",
                 }
           

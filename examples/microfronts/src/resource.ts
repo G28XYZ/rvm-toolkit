@@ -1,4 +1,5 @@
 import React from "react";
+import { getMicrofrontComponent } from "rvm-toolkit";
 import { MICROFRONTS, type MicrofrontKey } from "./microfronts.registry";
 
 type MicrofrontMode = "packages" | "federation";
@@ -14,6 +15,8 @@ export type LoadedMicrofront = {
   description?: string;
   Component: React.ComponentType;
 };
+
+const MissingMicrofront = () => React.createElement("div", { className: "empty-panel" }, "Microfront is unavailable.");
 
 function createResource<T>(loader: () => Promise<T>) {
   let status: "pending" | "success" | "error" = "pending";
@@ -56,12 +59,20 @@ async function loadManifestKeys(): Promise<MicrofrontKey[]> {
 
 async function loadOne(key: MicrofrontKey): Promise<LoadedMicrofront> {
   const meta = MICROFRONTS[key];
-  const mod = await meta.importers[mode]();
+  let mod: Record<string, unknown> | null | undefined;
 
-  const Component = (mod?.default ?? mod?.Microfront ?? mod?.App) as React.ComponentType | undefined;
-  if (!Component) throw new Error(`"${key}" must export default React component.`);
+  const Component = await getMicrofrontComponent({
+    importer: async () => {
+      mod = await meta.importers[mode]();
+      return mod;
+    },
+    fallback: MissingMicrofront,
+    onError: (error) => {
+      console.warn(`Failed to load "${key}" microfront. Fallback component will be used.`, error);
+    },
+  });
 
-  const mfMeta = mod?.microfrontMeta ?? {};
+  const mfMeta = (mod?.microfrontMeta ?? {}) as { title?: string; description?: string };
   return {
     key,
     origin: mode === "federation" ? meta.remote : key,
