@@ -6,28 +6,28 @@ var Oe;
 function pr() {
   if (Oe) return $;
   Oe = 1;
-  var y = Se, s = /* @__PURE__ */ Symbol.for("react.element"), m = /* @__PURE__ */ Symbol.for("react.fragment"), f = Object.prototype.hasOwnProperty, _ = y.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED.ReactCurrentOwner, R = { key: !0, ref: !0, __self: !0, __source: !0 };
-  function g(T, d, w) {
-    var h, O = {}, P = null, Y = null;
+  var E = Se, s = /* @__PURE__ */ Symbol.for("react.element"), R = /* @__PURE__ */ Symbol.for("react.fragment"), f = Object.prototype.hasOwnProperty, _ = E.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED.ReactCurrentOwner, g = { key: !0, ref: !0, __self: !0, __source: !0 };
+  function m(T, d, w) {
+    var y, O = {}, P = null, Y = null;
     w !== void 0 && (P = "" + w), d.key !== void 0 && (P = "" + d.key), d.ref !== void 0 && (Y = d.ref);
-    for (h in d) f.call(d, h) && !R.hasOwnProperty(h) && (O[h] = d[h]);
-    if (T && T.defaultProps) for (h in d = T.defaultProps, d) O[h] === void 0 && (O[h] = d[h]);
+    for (y in d) f.call(d, y) && !g.hasOwnProperty(y) && (O[y] = d[y]);
+    if (T && T.defaultProps) for (y in d = T.defaultProps, d) O[y] === void 0 && (O[y] = d[y]);
     return { $$typeof: s, type: T, key: P, ref: Y, props: O, _owner: _.current };
   }
-  return $.Fragment = m, $.jsx = g, $.jsxs = g, $;
+  return $.Fragment = R, $.jsx = m, $.jsxs = m, $;
 }
 var W = {};
 var Ce;
 function Er() {
   return Ce || (Ce = 1, process.env.NODE_ENV !== "production" && (function() {
-    var y = Se, s = /* @__PURE__ */ Symbol.for("react.element"), m = /* @__PURE__ */ Symbol.for("react.portal"), f = /* @__PURE__ */ Symbol.for("react.fragment"), _ = /* @__PURE__ */ Symbol.for("react.strict_mode"), R = /* @__PURE__ */ Symbol.for("react.profiler"), g = /* @__PURE__ */ Symbol.for("react.provider"), T = /* @__PURE__ */ Symbol.for("react.context"), d = /* @__PURE__ */ Symbol.for("react.forward_ref"), w = /* @__PURE__ */ Symbol.for("react.suspense"), h = /* @__PURE__ */ Symbol.for("react.suspense_list"), O = /* @__PURE__ */ Symbol.for("react.memo"), P = /* @__PURE__ */ Symbol.for("react.lazy"), Y = /* @__PURE__ */ Symbol.for("react.offscreen"), Z = Symbol.iterator, we = "@@iterator";
+    var E = Se, s = /* @__PURE__ */ Symbol.for("react.element"), R = /* @__PURE__ */ Symbol.for("react.portal"), f = /* @__PURE__ */ Symbol.for("react.fragment"), _ = /* @__PURE__ */ Symbol.for("react.strict_mode"), g = /* @__PURE__ */ Symbol.for("react.profiler"), m = /* @__PURE__ */ Symbol.for("react.provider"), T = /* @__PURE__ */ Symbol.for("react.context"), d = /* @__PURE__ */ Symbol.for("react.forward_ref"), w = /* @__PURE__ */ Symbol.for("react.suspense"), y = /* @__PURE__ */ Symbol.for("react.suspense_list"), O = /* @__PURE__ */ Symbol.for("react.memo"), P = /* @__PURE__ */ Symbol.for("react.lazy"), Y = /* @__PURE__ */ Symbol.for("react.offscreen"), Z = Symbol.iterator, we = "@@iterator";
     function je(e) {
       if (e === null || typeof e != "object")
         return null;
       var r = Z && e[Z] || e[we];
       return typeof r == "function" ? r : null;
     }
-    var j = y.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED;
+    var j = E.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED;
     function v(e) {
       {
         for (var r = arguments.length, t = new Array(r > 1 ? r - 1 : 0), n = 1; n < r; n++)
@@ -48,7 +48,7 @@ function Er() {
     var De = !1, Ae = !1, Fe = !1, Ie = !1, $e = !1, Q;
     Q = /* @__PURE__ */ Symbol.for("react.module.reference");
     function We(e) {
-      return !!(typeof e == "string" || typeof e == "function" || e === f || e === R || $e || e === _ || e === w || e === h || Ie || e === Y || De || Ae || Fe || typeof e == "object" && e !== null && (e.$$typeof === P || e.$$typeof === O || e.$$typeof === g || e.$$typeof === T || e.$$typeof === d || // This needs to include all possible module reference object
+      return !!(typeof e == "string" || typeof e == "function" || e === f || e === g || $e || e === _ || e === w || e === y || Ie || e === Y || De || Ae || Fe || typeof e == "object" && e !== null && (e.$$typeof === P || e.$$typeof === O || e.$$typeof === m || e.$$typeof === T || e.$$typeof === d || // This needs to include all possible module reference object
       // types supported by any Flight configuration anywhere since
       // we don't know which Flight build this will end up being used
       // with.
@@ -74,15 +74,15 @@ function Er() {
       switch (e) {
         case f:
           return "Fragment";
-        case m:
-          return "Portal";
         case R:
+          return "Portal";
+        case g:
           return "Profiler";
         case _:
           return "StrictMode";
         case w:
           return "Suspense";
-        case h:
+        case y:
           return "SuspenseList";
       }
       if (typeof e == "object")
@@ -90,7 +90,7 @@ function Er() {
           case T:
             var r = e;
             return ee(r) + ".Consumer";
-          case g:
+          case m:
             var t = e;
             return ee(t._context) + ".Provider";
           case d:
@@ -216,29 +216,29 @@ function Er() {
           }), typeof Reflect == "object" && Reflect.construct) {
             try {
               Reflect.construct(o, []);
-            } catch (E) {
-              n = E;
+            } catch (h) {
+              n = h;
             }
             Reflect.construct(e, [], o);
           } else {
             try {
               o.call();
-            } catch (E) {
-              n = E;
+            } catch (h) {
+              n = h;
             }
             e.call(o.prototype);
           }
         } else {
           try {
             throw Error();
-          } catch (E) {
-            n = E;
+          } catch (h) {
+            n = h;
           }
           e();
         }
-      } catch (E) {
-        if (E && n && typeof E.stack == "string") {
-          for (var a = E.stack.split(`
+      } catch (h) {
+        if (h && n && typeof h.stack == "string") {
+          for (var a = h.stack.split(`
 `), p = n.stack.split(`
 `), l = a.length - 1, c = p.length - 1; l >= 1 && c >= 0 && a[l] !== p[c]; )
             c--;
@@ -278,7 +278,7 @@ function Er() {
       switch (e) {
         case w:
           return U("Suspense");
-        case h:
+        case y:
           return U("SuspenseList");
       }
       if (typeof e == "object")
@@ -455,7 +455,7 @@ function Er() {
     function X(e) {
       return typeof e == "object" && e !== null && e.$$typeof === s;
     }
-    function _e() {
+    function Re() {
       {
         if (z.current) {
           var e = C(z.current.type);
@@ -470,10 +470,10 @@ Check the render method of \`` + e + "`.";
     function tr(e) {
       return "";
     }
-    var Re = {};
+    var _e = {};
     function nr(e) {
       {
-        var r = _e();
+        var r = Re();
         if (!r) {
           var t = typeof e == "string" ? e : e.displayName || e.name;
           t && (r = `
@@ -489,9 +489,9 @@ Check the top-level render call using <` + t + ">.");
           return;
         e._store.validated = !0;
         var t = nr(r);
-        if (Re[t])
+        if (_e[t])
           return;
-        Re[t] = !0;
+        _e[t] = !0;
         var n = "";
         e && e._owner && e._owner !== z.current && (n = " It was passed a child from " + C(e._owner.type) + "."), k(e), v('Each child in a list should have a unique "key" prop.%s%s See https://reactjs.org/link/warning-keys for more information.', t, n), k(null);
       }
@@ -560,7 +560,7 @@ Check the top-level render call using <` + t + ">.");
           var a = "";
           (e === void 0 || typeof e == "object" && e !== null && Object.keys(e).length === 0) && (a += " You likely forgot to export your component from the file it's defined in, or you might have mixed up default and named imports.");
           var p = tr();
-          p ? a += p : a += _e();
+          p ? a += p : a += Re();
           var l;
           e === null ? l = "null" : K(e) ? l = "array" : e !== void 0 && e.$$typeof === s ? (l = "<" + (C(e.type) || "Unknown") + " />", a = " Did you accidentally export a JSX literal instead of a component?") : l = typeof e, v("React.jsx: type is invalid -- expected a string (for built-in components) or a class/function (for composite components) but got: %s.%s", l, a);
         }
@@ -581,11 +581,11 @@ Check the top-level render call using <` + t + ">.");
               be(b, e);
         }
         if (I.call(r, "key")) {
-          var S = C(e), E = Object.keys(r).filter(function(fr) {
+          var S = C(e), h = Object.keys(r).filter(function(fr) {
             return fr !== "key";
-          }), H = E.length > 0 ? "{key: someKey, " + E.join(": ..., ") + ": ...}" : "{key: someKey}";
+          }), H = h.length > 0 ? "{key: someKey, " + h.join(": ..., ") + ": ...}" : "{key: someKey}";
           if (!me[S + H]) {
-            var cr = E.length > 0 ? "{" + E.join(": ..., ") + ": ...}" : "{}";
+            var cr = h.length > 0 ? "{" + h.join(": ..., ") + ": ...}" : "{}";
             v(`A props object containing a "key" prop is being spread into JSX:
   let props = %s;
   <%s {...props} />
@@ -612,25 +612,25 @@ function hr() {
   return Pe || (Pe = 1, process.env.NODE_ENV === "production" ? V.exports = pr() : V.exports = Er()), V.exports;
 }
 var yr = hr(), A = {}, xe;
-function _r() {
+function Rr() {
   if (xe) return A;
   xe = 1;
-  var y = dr;
+  var E = dr;
   if (process.env.NODE_ENV === "production")
-    A.createRoot = y.createRoot, A.hydrateRoot = y.hydrateRoot;
+    A.createRoot = E.createRoot, A.hydrateRoot = E.hydrateRoot;
   else {
-    var s = y.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED;
-    A.createRoot = function(m, f) {
+    var s = E.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED;
+    A.createRoot = function(R, f) {
       s.usingClientEntryPoint = !0;
       try {
-        return y.createRoot(m, f);
+        return E.createRoot(R, f);
       } finally {
         s.usingClientEntryPoint = !1;
       }
-    }, A.hydrateRoot = function(m, f, _) {
+    }, A.hydrateRoot = function(R, f, _) {
       s.usingClientEntryPoint = !0;
       try {
-        return y.hydrateRoot(m, f, _);
+        return E.hydrateRoot(R, f, _);
       } finally {
         s.usingClientEntryPoint = !1;
       }
@@ -638,43 +638,46 @@ function _r() {
   }
   return A;
 }
-var Rr = _r();
+var _r = Rr();
 const gr = "microfront:update";
-function Or({ component: y, meta: s, updateEvent: m = gr }) {
+function br(E, s, R) {
+  const f = _r.createRoot(E);
+  return f.render(yr.jsx(s, Object.assign({}, R))), () => {
+    f.unmount();
+  };
+}
+function Cr({ component: E, meta: s, updateEvent: R = gr }) {
   return {
     microfrontMeta: s,
-    mount(_, R) {
-      const g = Rr.createRoot(_);
-      return g.render(yr.jsx(y, { context: R.context })), () => {
-        g.unmount();
-      };
+    mount(_, g) {
+      return br(_, E, { context: g.context });
     }
   };
 }
-class Cr {
+class Pr {
   constructor() {
     this.context = null;
   }
   setContext(s) {
     this.context = s;
   }
-  getJson(s, m) {
+  getJson(s, R) {
     return vr(this, void 0, void 0, function* () {
       var f, _;
-      const R = yield fetch(`${this.getBaseUrl(s)}${m}`, {
+      const g = yield fetch(`${this.getBaseUrl(s)}${R}`, {
         credentials: "include",
         headers: {
           Accept: "application/json"
         }
       });
-      if (!R.ok) {
-        const T = yield R.text().catch(() => "");
-        throw new Error(`HTTP ${R.status}: ${T || R.statusText}`);
+      if (!g.ok) {
+        const T = yield g.text().catch(() => "");
+        throw new Error(`HTTP ${g.status}: ${T || g.statusText}`);
       }
-      const g = yield R.json();
-      if (g.success === !1)
-        throw new Error(String(((f = g.errors) === null || f === void 0 ? void 0 : f[0]) || "Microfront API request failed"));
-      return (_ = g.data) !== null && _ !== void 0 ? _ : [];
+      const m = yield g.json();
+      if (m.success === !1)
+        throw new Error(String(((f = m.errors) === null || f === void 0 ? void 0 : f[0]) || "Microfront API request failed"));
+      return (_ = m.data) !== null && _ !== void 0 ? _ : [];
     });
   }
   getLibvirtJson(s) {
@@ -691,6 +694,7 @@ class Cr {
 }
 export {
   gr as MICROFRONT_UPDATE_EVENT,
-  Cr as MicrofrontApiClient,
-  Or as createReactMicrofrontend
+  Pr as MicrofrontApiClient,
+  Cr as createReactMicrofrontend,
+  br as mountReactComponent
 };

@@ -1,4 +1,5 @@
 import { createRoot, type Root } from "react-dom/client";
+import type { ComponentType } from "react";
 
 import type {
   MicrofrontendComponent,
@@ -20,6 +21,19 @@ type ImportMetaWithHot = ImportMeta & {
   };
 };
 
+export function mountReactComponent<TProps>(
+  element: HTMLElement,
+  Component: ComponentType<TProps>,
+  props: TProps
+) {
+  const root: Root = createRoot(element);
+  root.render(<Component {...props} />);
+
+  return () => {
+    root.unmount();
+  };
+}
+
 export function createReactMicrofrontend({
   component: Component,
   meta,
@@ -28,12 +42,7 @@ export function createReactMicrofrontend({
   const definition: MicrofrontendDefinition = {
     microfrontMeta: meta,
     mount(element, props) {
-      const root: Root = createRoot(element);
-      root.render(<Component context={props.context} />);
-
-      return () => {
-        root.unmount();
-      };
+      return mountReactComponent(element, Component, { context: props.context });
     },
   };
 

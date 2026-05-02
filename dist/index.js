@@ -1,7 +1,9 @@
 import "reflect-metadata";
 import { d as ne, _ as L, a as K, b as U, c as D, e as Ti } from "./tslib.es6-DQYNRcek.js";
 import { lazy as ji, useMemo as Mi, useEffect as Ei, isValidElement as Di } from "react";
+import { useEffect as ao } from "react";
 import { makeObservable as ur, observable as le, runInAction as W, isObservable as Or, computed as X, action as G, flow as Pi, isFlowCancellationError as Ii, makeAutoObservable as ki } from "mobx";
+import { action as no, computed as so, observable as oo, runInAction as co } from "mobx";
 import { observer as Fi } from "mobx-react";
 var fe = typeof globalThis < "u" ? globalThis : typeof window < "u" ? window : typeof global < "u" ? global : typeof self < "u" ? self : {};
 function yr(e) {
@@ -2468,9 +2470,11 @@ export {
   Ai as StoreBase,
   Fs as TODO,
   Qs as ViewModel,
+  no as action,
   Cs as applyCommandMethods,
   Ri as asyncCommand,
   eo as commandAction,
+  so as computed,
   z as defineMetadata,
   Ls as define_prop,
   zs as exclude,
@@ -2481,8 +2485,11 @@ export {
   B as getOwnMetadata,
   ks as isSerializable,
   Is as lazyMicrofrontComponent,
+  oo as observable,
   Hi as resolveMicrofrontComponent,
+  co as runInAction,
   Bs as submit,
+  ao as useEffect,
   Hs as validation,
   Js as view
 };

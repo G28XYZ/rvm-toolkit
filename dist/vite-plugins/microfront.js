@@ -1,7 +1,20 @@
-import { mvvmServiceDiPlugin as i } from "./mvvm-di.js";
-function s({ entry: r, outDir: e = "dist", fileName: t = "microfront.js" }) {
+import { mvvmServiceDiPlugin as s } from "./mvvm-di.js";
+const n = {
+  "rvm-toolkit": {
+    singleton: !0,
+    requiredVersion: !1
+  }
+};
+function l({ entry: r, outDir: t = "dist", fileName: i = "microfront.js", shared: o = n }) {
+  const e = Object.keys(o);
   return {
-    plugins: [i()],
+    plugins: [s()],
+    resolve: {
+      dedupe: e
+    },
+    optimizeDeps: {
+      include: e
+    },
     server: {
       strictPort: !0,
       cors: !0,
@@ -17,16 +30,17 @@ function s({ entry: r, outDir: e = "dist", fileName: t = "microfront.js" }) {
       }
     },
     build: {
-      outDir: e,
+      outDir: t,
       emptyOutDir: !0,
       lib: {
         entry: r,
         formats: ["es"],
-        fileName: () => t
+        fileName: () => i
       }
     }
   };
 }
 export {
-  s as defineMicrofrontConfig
+  l as defineMicrofrontConfig,
+  n as microfrontShared
 };
