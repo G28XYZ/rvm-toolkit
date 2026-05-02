@@ -24,8 +24,10 @@ export default defineConfig((env) => ({
         index: path.resolve(__dirname, "src", "index.ts"),
         "hooks/index": path.resolve(__dirname, "src", "hooks", "index.ts"),
         "hooks/virtual-scroll": path.resolve(__dirname, "src", "hooks", "virtual-scroll.ts"),
+        "microfront/index": path.resolve(__dirname, "src", "microfront", "index.ts"),
         "vite-plugins/index": path.resolve(__dirname, "src", "vite-plugins", "index.ts"),
         "vite-plugins/mvvm-di": path.resolve(__dirname, "src", "vite-plugins", "mvvm-di.ts"),
+        "vite-plugins/microfront": path.resolve(__dirname, "src", "vite-plugins", "microfront.ts"),
       },
       name: "rvm-toolkit",
       fileName: (format, entryName) => {
@@ -47,6 +49,7 @@ export default defineConfig((env) => ({
         "typescript",
         "node:fs/promises",
         "node:path",
+        "vite",
       ],
       plugins: [
         // typescriptPaths({

@@ -1,1 +1,1 @@
-"use strict";Object.defineProperty(exports,Symbol.toStringTag,{value:"Module"});const e=require("./mvvm-di.cjs");exports.mvvmServiceDiPlugin=e.mvvmServiceDiPlugin;
+"use strict";Object.defineProperty(exports,Symbol.toStringTag,{value:"Module"});const i=require("./mvvm-di.cjs"),e=require("./microfront.cjs");exports.mvvmServiceDiPlugin=i.mvvmServiceDiPlugin;exports.defineMicrofrontConfig=e.defineMicrofrontConfig;

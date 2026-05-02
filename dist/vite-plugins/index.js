@@ -1,4 +1,6 @@
-import { mvvmServiceDiPlugin as m } from "./mvvm-di.js";
+import { mvvmServiceDiPlugin as e } from "./mvvm-di.js";
+import { defineMicrofrontConfig as f } from "./microfront.js";
 export {
-  m as mvvmServiceDiPlugin
+  f as defineMicrofrontConfig,
+  e as mvvmServiceDiPlugin
 };

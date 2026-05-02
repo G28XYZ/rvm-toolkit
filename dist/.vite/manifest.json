@@ -34,10 +34,29 @@
       "_tslib.es6-ETAspTbb.cjs"
     ]
   },
+  "src/microfront/index.ts": {
+    "file": "microfront/index.cjs",
+    "name": "microfront/index",
+    "src": "src/microfront/index.ts",
+    "isEntry": true,
+    "imports": [
+      "_tslib.es6-ETAspTbb.cjs"
+    ]
+  },
   "src/vite-plugins/index.ts": {
     "file": "vite-plugins/index.cjs",
     "name": "vite-plugins/index",
     "src": "src/vite-plugins/index.ts",
+    "isEntry": true,
+    "imports": [
+      "src/vite-plugins/mvvm-di.ts",
+      "src/vite-plugins/microfront.ts"
+    ]
+  },
+  "src/vite-plugins/microfront.ts": {
+    "file": "vite-plugins/microfront.cjs",
+    "name": "vite-plugins/microfront",
+    "src": "src/vite-plugins/microfront.ts",
     "isEntry": true,
     "imports": [
       "src/vite-plugins/mvvm-di.ts"

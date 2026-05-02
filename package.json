@@ -27,6 +27,11 @@
       "import": "./dist/hooks/virtual-scroll.js",
       "require": "./dist/hooks/virtual-scroll.cjs"
     },
+    "./microfront": {
+      "types": "./dist/microfront/index.d.ts",
+      "import": "./dist/microfront/index.js",
+      "require": "./dist/microfront/index.cjs"
+    },
     "./vite-plugins": {
       "import": "./dist/vite-plugins/index.js",
       "require": "./dist/vite-plugins/index.cjs"
@@ -34,6 +39,11 @@
     "./vite-plugins/mvvm-di": {
       "import": "./dist/vite-plugins/mvvm-di.js",
       "require": "./dist/vite-plugins/mvvm-di.cjs"
+    },
+    "./vite-plugins/microfront": {
+      "types": "./dist/vite-plugins/microfront.d.ts",
+      "import": "./dist/vite-plugins/microfront.js",
+      "require": "./dist/vite-plugins/microfront.cjs"
     }
   },
   "files": [
