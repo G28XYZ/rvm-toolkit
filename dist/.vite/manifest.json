@@ -38,10 +38,7 @@
     "file": "microfront/index.cjs",
     "name": "microfront/index",
     "src": "src/microfront/index.ts",
-    "isEntry": true,
-    "imports": [
-      "_tslib.es6-ETAspTbb.cjs"
-    ]
+    "isEntry": true
   },
   "src/vite-plugins/index.ts": {
     "file": "vite-plugins/index.cjs",
