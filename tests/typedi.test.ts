@@ -78,6 +78,26 @@ describe("typedi", () => {
     expect(consumer.dep?.name).toBe("dep");
   });
 
+  it("лениво резолвит сервис, зарегистрированный после consumer", () => {
+    @Service("late-consumer")
+    class LateConsumer {
+      @Inject("late-dep")
+      dep: { name: string } | null = null;
+    }
+
+    const consumer = GetService<LateConsumer>("late-consumer", "instance");
+
+    expect(consumer?.dep).toBeNull();
+
+    @Service("late-dep")
+    class LateDep {
+      name = "late";
+    }
+
+    expect(consumer?.dep).toBeInstanceOf(LateDep);
+    expect(consumer?.dep?.name).toBe("late");
+  });
+
   it("поддерживает ручную регистрацию сервиса", () => {
     class ManualService {
       value = 42;

@@ -54,6 +54,30 @@ export function Inject<This, T>(serviceName: T): (targetOrValue: object | undefi
  * Реализация Inject.
  */
 export function Inject<This, T>(serviceName: string | T) {
+  const defineLazyProperty = (target: object, name: string | symbol, initialValue?: unknown) => {
+    let value = initialValue;
+
+    Object.defineProperty(target, name, {
+      configurable: true,
+      enumerable: true,
+      get() {
+        const service = GetService(serviceName as any, "instance");
+        if (service) {
+          Object.defineProperty(this, name, { value: service, writable: true, configurable: true, enumerable: true });
+          return service;
+        }
+        return value;
+      },
+      set(nextValue: unknown) {
+        const service = GetService(serviceName as any, "instance");
+        value = service ?? nextValue;
+        if (service) {
+          Object.defineProperty(this, name, { value, writable: true, configurable: true, enumerable: true });
+        }
+      },
+    });
+  };
+
   const defineLegacy = (target: object, name: string | symbol) => {
     Object.defineProperty(target, name, {
       configurable: true,
@@ -82,11 +106,9 @@ export function Inject<This, T>(serviceName: string | T) {
       defineLegacy(t, c);
       return;
     }
-    c.addInitializer(async function (this) {
-      const service = GetService(serviceName, "instance");
-      if (service && Object.hasOwn(this as object, c.name)) {
-        Reflect.set(this as object, c.name, service);
-      }
+    c.addInitializer(function (this) {
+      if (c.private) return;
+      defineLazyProperty(this as object, c.name, Reflect.get(this as object, c.name));
     });
     return (value: any) => value;
   }
