@@ -95,8 +95,11 @@ export function Inject<This, T>(serviceName: string | T) {
       },
       set(value: unknown) {
         const service = GetService(serviceName as any, "instance");
-        const nextValue = service ?? value;
-        Object.defineProperty(this, name, { value: nextValue, writable: true, configurable: true, enumerable: true });
+        if (service) {
+          Object.defineProperty(this, name, { value: service, writable: true, configurable: true, enumerable: true });
+          return;
+        }
+        defineLazyProperty(this, name, value);
       },
     });
   };

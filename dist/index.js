@@ -194,7 +194,11 @@ function Yi(e) {
       },
       set(s) {
         const o = $(e, "instance");
-        Object.defineProperty(this, n, { value: o ?? s, writable: !0, configurable: !0, enumerable: !0 });
+        if (o) {
+          Object.defineProperty(this, n, { value: o, writable: !0, configurable: !0, enumerable: !0 });
+          return;
+        }
+        t(this, n, s);
       }
     });
   };

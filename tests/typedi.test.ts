@@ -129,5 +129,25 @@ describe("typedi", () => {
     expect(consumer.dep?.value).toBe("ok");
   });
 
+  it("legacy Inject не кеширует undefined до поздней регистрации сервиса", () => {
+    class LegacyConsumer {
+      dep?: { value: string };
+    }
+
+    Inject("legacy-late-dep")(LegacyConsumer.prototype, "dep");
+
+    const consumer = new LegacyConsumer();
+    consumer.dep = undefined;
+    expect(consumer.dep).toBeUndefined();
+
+    @Service("legacy-late-dep")
+    class LegacyLateDep {
+      value = "late";
+    }
+
+    expect(consumer.dep).toBeInstanceOf(LegacyLateDep);
+    expect(consumer.dep?.value).toBe("late");
+  });
+
   // createServiceContainer removed
 });
